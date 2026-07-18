@@ -1,0 +1,7 @@
+*.bak
+*.bak.*
+*.swp
+*.swo
+*~
+.DS_Store
+config.kdl.bak

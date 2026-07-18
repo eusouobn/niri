@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# noctalia-r — Recarregar Noctalia Shell
+pkill -f "qs -c noctalia-shell" 2>/dev/null
+sleep 1
+if pgrep -f "qs -c noctalia-shell" >/dev/null 2>&1; then
+    pkill -9 -f "qs -c noctalia-shell" 2>/dev/null
+    sleep 0.5
+fi
+niri msg action spawn -- qs -c noctalia-shell &
+disown
