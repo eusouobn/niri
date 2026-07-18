@@ -83,6 +83,8 @@ curl -sS https://raw.githubusercontent.com/eusouobn/niri/main/install-niri.sh | 
 ```
 niri/
 ├── install-niri.sh                   ← Script de instalação completo
+├── scripts/
+│   └── install.sh                    ← Instalador interativo Arch Linux
 ├── .config/
 │   ├── niri/config.kdl               ← Config do compositor
 │   ├── noctalia/                      ← Tema e settings do Noctalia Shell
