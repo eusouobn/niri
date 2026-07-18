@@ -641,6 +641,22 @@ fi
 quote
 
 # ──────────────────────────────────────────────
+# 8e2. Udisks2 — escrita síncrona para USB
+# ──────────────────────────────────────────────
+step "💾 Configurando escrita síncrona para USB..."
+
+if [ -f "$SCRIPT_DIR/etc/udisks2/mount_options.conf" ]; then
+  sudo mkdir -p /etc/udisks2
+  sudo cp "$SCRIPT_DIR/etc/udisks2/mount_options.conf" /etc/udisks2/
+  sudo systemctl restart udisks2 2>/dev/null || true
+  ok "udisks2 configurado — USBs escrevem direto no disco (sem cache)"
+  info "Barra de progresso do Dolphin agora mostra o progresso real"
+else
+  warn "mount_options.conf não encontrado"
+fi
+quote
+
+# ──────────────────────────────────────────────
 # 8f. UFW — liberar tráfego do libvirt + Waydroid
 # ──────────────────────────────────────────────
 step "🔓 Configurando UFW para libvirt + Waydroid..."

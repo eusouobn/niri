@@ -97,7 +97,8 @@ niri/
 ├── .local/
 │   └── bin/gufw                       ← Wrapper do firewall
 ├── etc/
-│   └── pacman.d/hooks/kde-cache.hook  ← Hook pós-transação do pacman
+│   ├── pacman.d/hooks/kde-cache.hook  ← Hook pós-transação do pacman
+│   └── udisks2/mount_options.conf    ← Escrita síncrona para USB
 └── README.md
 ```
 
