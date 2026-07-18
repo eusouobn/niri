@@ -657,9 +657,91 @@ fi
 quote
 
 # ──────────────────────────────────────────────
-# 8f. UFW — liberar tráfego do libvirt + Waydroid
+# 8e3. Otimização de I/O e memória para desktop
 # ──────────────────────────────────────────────
-step "🔓 Configurando UFW para libvirt + Waydroid..."
+step "⚡ Otimizando I/O e memória para desktop..."
+
+# I/O Scheduler: NVMe=none, SSD=mq-deadline, HDD=bfq
+for disk in /sys/block/nvme*/queue/scheduler /sys/block/sd*/queue/scheduler; do
+  [ -f "$disk" ] || continue
+  disk_name=$(echo "$disk" | cut -d'/' -f4)
+
+  if echo "$disk_name" | grep -q "^nvme"; then
+    echo "none" | sudo tee "$disk" > /dev/null
+    echo "  ✔ $disk_name → none (NVMe)"
+  elif echo "$disk_name" | grep -q "^sd"; then
+    if [ -f "/sys/block/$disk_name/queue/rotational" ]; then
+      rotational=$(cat "/sys/block/$disk_name/queue/rotational")
+      if [ "$rotational" = "0" ]; then
+        echo "mq-deadline" | sudo tee "$disk" > /dev/null
+        echo "  ✔ $disk_name → mq-deadline (SSD SATA)"
+      else
+        echo "bfq" | sudo tee "$disk" > /dev/null
+        echo "  ✔ $disk_name → bfq (HDD)"
+      fi
+    fi
+  fi
+done
+
+# Dirty pages — flush mais frequente (evita travamento)
+sudo sysctl -w vm.dirty_ratio=5 > /dev/null
+sudo sysctl -w vm.dirty_background_ratio=2 > /dev/null
+sudo sysctl -w vm.dirty_writeback_centisecs=300 > /dev/null
+sudo sysctl -w vm.dirty_expire_centisecs=1500 > /dev/null
+sudo sysctl -w vm.dirty_ratio_bytes=134217728 > /dev/null
+sudo sysctl -w vm.page-cluster=3 > /dev/null
+sudo sysctl -w vm.vfs_cache_pressure=50 > /dev/null
+
+echo "  ✔ dirty_ratio: 5% (era 20%)"
+echo "  ✔ dirty_background_ratio: 2% (era 10%)"
+
+# Persistir no boot
+sudo tee /etc/sysctl.d/99-desktop-io.conf > /dev/null <<'EOF'
+# Otimizações de I/O e memória para desktop
+vm.dirty_ratio = 5
+vm.dirty_background_ratio = 2
+vm.dirty_writeback_centisecs = 300
+vm.dirty_expire_centisecs = 1500
+vm.dirty_ratio_bytes = 134217728
+vm.page-cluster = 3
+vm.vfs_cache_pressure = 50
+EOF
+
+sudo tee /etc/udev/rules.d/60-ioscheduler.rules > /dev/null <<'EOF'
+ACTION=="add|change", KERNEL=="nvme[0-9]*", ATTR{queue/scheduler}="none"
+ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="0", ATTR{queue/scheduler}="mq-deadline"
+ACTION=="add|change", KERNEL=="sd[a-z]", ATTR{queue/rotational}=="1", ATTR{queue/scheduler}="bfq"
+EOF
+
+ok "I/O otimizado — scheduler + dirty pages + cache"
+info "Reinicie para aplicar o scheduler nos discos"
+quote
+
+# ──────────────────────────────────────────────
+# 8e4. Swap — memória virtual
+# ──────────────────────────────────────────────
+step "🔄 Criando swap de 4GB..."
+
+if swapon --show | grep -q "/swapfile"; then
+  info "Swap já existe, ignorando"
+else
+  sudo dd if=/dev/zero of=/swapfile bs=1M count=4096 status=progress
+  sudo chmod 600 /swapfile
+  sudo mkswap /swapfile
+  sudo swapon /swapfile
+
+  # Persistir no fstab
+  if ! grep -q "^/swapfile" /etc/fstab; then
+    echo "/swapfile none swap defaults 0 0" | sudo tee -a /etc/fstab
+  fi
+
+  ok "Swap de 4GB criado e ativado"
+  info "Sistema não trava mais com falta de memória"
+fi
+quote
+
+# ──────────────────────────────────────────────
+# 8f. UFW — liberar tráfego do libvirt + Waydroid
 
 if command -v ufw &>/dev/null; then
   # Libera forwarding na bridge virbr0 (NAT das VMs)

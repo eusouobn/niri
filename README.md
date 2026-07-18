@@ -106,4 +106,6 @@ niri/
 
 - **Atualizar o sistema**: `sudo pacman -Syu`
 - **Instalar programas do AUR**: `yay -S nome-do-pacote`
+- **Swap**: Criado automaticamente durante a instalação (4GB)
+- **Otimização de I/O**: Aplicada automaticamente (scheduler + dirty pages)
 - **Mudar tema de ícones**: `nwg-look`
