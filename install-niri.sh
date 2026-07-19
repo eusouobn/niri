@@ -505,6 +505,53 @@ fi
 quote
 
 # ──────────────────────────────────────────────
+# 6c. Configuração NVIDIA para Wayland
+# ──────────────────────────────────────────────
+if lspci | grep -qi nvidia; then
+  step "🎮 Configurando NVIDIA para Wayland..."
+
+  # Kernel parameters para NVIDIA + Wayland
+  if [ -f /etc/default/grub ]; then
+    if ! grep -q "nvidia_drm.modeset=1" /etc/default/grub; then
+      sudo sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="\(.*\)"/GRUB_CMDLINE_LINUX_DEFAULT="\1 nvidia_drm.modeset=1 nvidia_drm.fbdev=1"/' /etc/default/grub
+      sudo grub-mkconfig -o /boot/grub/grub.cfg
+      ok "GRUB: nvidia_drm.modeset=1 adicionado"
+    else
+      info "GRUB já configurado para NVIDIA"
+    fi
+  fi
+
+  # Modprobe para NVIDIA
+  sudo tee /etc/modprobe.d/nvidia.conf > /dev/null <<'EOF'
+options nvidia NVreg_PreserveVideoMemoryAllocations=1
+options nvidia_drm modeset=1 fbdev=1
+EOF
+  ok "Modprobe: nvidia.conf configurado"
+
+  # Hooks do initramfs
+  sudo tee /etc/mkinitcpio.conf.d/nvidia.conf > /dev/null <<'EOF'
+MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)
+EOF
+  sudo mkinitcpio -P
+  ok "Initramfs: módulos NVIDIA incluídos"
+
+  # Variáveis de ambiente para Wayland
+  sudo mkdir -p /etc/environment.d
+  sudo tee /etc/environment.d/nvidia.conf > /dev/null <<'EOF'
+LIBVA_DRIVER_NAME=nvidia
+NVD_BACKEND=direct
+__GLX_VENDOR_LIBRARY_NAME=nvidia
+GBM_BACKEND=nvidia-drm
+EOF
+  mkdir -p "$HOME/.config/environment.d"
+  cp /etc/environment.d/nvidia.conf "$HOME/.config/environment.d/nvidia.conf"
+  ok "Variáveis de ambiente NVIDIA configuradas"
+
+  info "Reinicie para aplicar as mudanças do NVIDIA"
+  quote
+fi
+
+# ──────────────────────────────────────────────
 # 7. SDDM + Astronaut Theme
 # ──────────────────────────────────────────────
 step "🚀 Configurando SDDM..."
