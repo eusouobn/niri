@@ -584,6 +584,8 @@ fi
 # ── GRUB ───────────────────────────────────────────────────
 info "Instalando GRUB..."
 
+arch-chroot /mnt pacman -S --noconfirm grub
+
 if [ -d /sys/firmware/efi ]; then
   arch-chroot /mnt pacman -S --noconfirm efibootmgr
   arch-chroot /mnt grub-install \
