@@ -475,7 +475,7 @@ echo "127.0.1.1 $HOSTNAME.localdomain $HOSTNAME" >> /mnt/etc/hosts
 
 # Mirrors + parallel downloads
 cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
-sed -i 's/#ParallelDownloads/ParallelDownloads/' /mnt/etc/pacman.conf
+sed -i 's/#ParallelDownloads = 5/ParallelDownloads = 16/' /mnt/etc/pacman.conf
 
 # Multilib
 sed -i '/\[multilib\]/,/Include/s/^#//' /mnt/etc/pacman.conf

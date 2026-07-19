@@ -613,6 +613,32 @@ info "Reinicie para aplicar o scheduler nos discos"
 quote
 
 # ──────────────────────────────────────────────
+# 8e4. Pacman parallel downloads + TRIM
+# ──────────────────────────────────────────────
+step "📦 Configurando pacman + TRIM..."
+
+# ParallelDownloads = 16
+if grep -q "^#ParallelDownloads = 5" /etc/pacman.conf; then
+  sudo sed -i 's/^#ParallelDownloads = 5/ParallelDownloads = 16/' /etc/pacman.conf
+  ok "pacman: ParallelDownloads = 16"
+elif grep -q "^ParallelDownloads" /etc/pacman.conf; then
+  sudo sed -i 's/^ParallelDownloads = .*/ParallelDownloads = 16/' /etc/pacman.conf
+  ok "pacman: ParallelDownloads atualizado para 16"
+else
+  info "pacman: ParallelDownloads já configurado"
+fi
+
+# TRIM para SSDs
+if systemctl is-enabled fstrim.timer &>/dev/null; then
+  ok "fstrim.timer já habilitado"
+elif lsblk -d -o ROTA 2>/dev/null | grep -q "^0$"; then
+  sudo systemctl enable --now fstrim.timer 2>/dev/null && \
+    ok "fstrim.timer habilitado (TRIM semanal)" || warn "Falha ao habilitar fstrim.timer"
+else
+  info "Nenhum SSD detectado — TRIM não habilitado"
+fi
+
+# ──────────────────────────────────────────────
 # 8e4. Swap — memória virtual
 # ──────────────────────────────────────────────
 step "🔄 Criando swap de 4GB..."
