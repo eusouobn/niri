@@ -341,28 +341,43 @@ else
   info "USB Drive Manager já instalado"
 fi
 
-# Criar/atualizar plugins.json com plugins habilitados
-if [ ! -f "$NOCTALIA_PLUGINS_JSON" ]; then
-  cat > "$NOCTALIA_PLUGINS_JSON" << 'PLUGEOF'
-{
-  "version": 1,
-  "states": {
-    "clipper": {
-      "enabled": true,
-      "sourceUrl": "https://github.com/blackbartblues/noctalia-clipper"
+# Criar/atualizar plugins.json — adiciona plugins preservando os existentes
+python3 -c "
+import json, os
+
+plugins_file = '$NOCTALIA_PLUGINS_JSON'
+new_plugins = {
+    'clipper': {
+        'enabled': True,
+        'sourceUrl': 'https://github.com/blackbartblues/noctalia-clipper'
     },
-    "usb-drive-manager": {
-      "enabled": true,
-      "sourceUrl": "https://github.com/hennifant/noctalia-shell-usb-widget"
+    'usb-drive-manager': {
+        'enabled': True,
+        'sourceUrl': 'https://github.com/hennifant/noctalia-shell-usb-widget'
     }
-  },
-  "sources": []
 }
-PLUGEOF
-  ok "plugins.json criado com Clipper e USB Drive Manager habilitados"
-else
-  info "plugins.json já existe — mantendo configuração atual"
-fi
+
+if os.path.exists(plugins_file):
+    with open(plugins_file) as f:
+        data = json.load(f)
+else:
+    data = {'version': 1, 'states': {}, 'sources': []}
+
+if 'states' not in data:
+    data['states'] = {}
+
+for plugin_id, state in new_plugins.items():
+    if plugin_id not in data['states']:
+        data['states'][plugin_id] = state
+        print(f'  + {plugin_id} adicionado')
+    else:
+        print(f'  = {plugin_id} já existe — mantido')
+
+with open(plugins_file, 'w') as f:
+    json.dump(data, f, indent=2)
+
+print('plugins.json atualizado')
+" || warn "Falha ao atualizar plugins.json"
 
 # ──────────────────────────────────────────────
 # 6c. Configuração NVIDIA para Wayland
