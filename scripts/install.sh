@@ -48,12 +48,25 @@ read -rp "  Nome de usuário: " USERNAME
 # ══════════════════════════════════════════════════════════
 title "3/12 — DISCO DE INSTALAÇÃO"
 
-DEVICES=$(lsblk -dlnp -o NAME,SIZE,TYPE,ROTA | grep -E "disk" | grep -v loop)
-echo -e "${BOLD}Dispositivos disponíveis:${NC}\n"
-echo "$DEVICES" | awk '{printf "  %-12s %-8s %-6s %s\n", $1, $2, $3, ($4==0?"SSD":"HDD")}'
-echo ""
-
 DEVICES_LIST=$(lsblk -nd --output NAME | grep -E "sd|hd|vd|nvme|mmcblk")
+echo -e "${BOLD}Dispositivos disponíveis:${NC}\n"
+
+for disk in $DEVICES_LIST; do
+  MODEL=$(lsblk -dno MODEL "/dev/$disk" 2>/dev/null | xargs)
+  SERIAL=$(lsblk -dno SERIAL "/dev/$disk" 2>/dev/null | xargs)
+  SIZE=$(lsblk -dno SIZE "/dev/$disk" 2>/dev/null | xargs)
+  ROTA=$(lsblk -dno ROTA "/dev/$disk" 2>/dev/null)
+  TYPE=$([ "$ROTA" = "0" ] && echo "SSD" || echo "HDD")
+  PARTS=$(lsblk -no NAME "/dev/$disk" 2>/dev/null | tail -n +2 | wc -l)
+
+  echo -e "  ${BOLD}$disk${NC}"
+  echo "    Modelo:  $MODEL"
+  echo "    Serial:  $SERIAL"
+  echo "    Tamanho: $SIZE ($TYPE)"
+  echo "    Partições: $PARTS"
+  echo ""
+done
+
 PS3=$'\n  Selecione o disco: '
 select INSTDISK in $DEVICES_LIST; do
   [ -n "$INSTDISK" ] && break
@@ -97,8 +110,20 @@ done
 if [ "$SEPARATE_HOME" = "y" ]; then
   echo ""
   echo -e "${BOLD}Dispositivos disponíveis:${NC}\n"
-  echo "$DEVICES" | awk '{printf "  %-12s %-8s %-6s %s\n", $1, $2, $3, ($4==0?"SSD":"HDD")}'
-  echo ""
+
+  for disk in $DEVICES_LIST; do
+    MODEL=$(lsblk -dno MODEL "/dev/$disk" 2>/dev/null | xargs)
+    SERIAL=$(lsblk -dno SERIAL "/dev/$disk" 2>/dev/null | xargs)
+    SIZE=$(lsblk -dno SIZE "/dev/$disk" 2>/dev/null | xargs)
+    ROTA=$(lsblk -dno ROTA "/dev/$disk" 2>/dev/null)
+    TYPE=$([ "$ROTA" = "0" ] && echo "SSD" || echo "HDD")
+
+    echo -e "  ${BOLD}$disk${NC}"
+    echo "    Modelo:  $MODEL"
+    echo "    Serial:  $SERIAL"
+    echo "    Tamanho: $SIZE ($TYPE)"
+    echo ""
+  done
 
   PS3=$'\n  Disco para /home: '
   select HOMEDISK in $DEVICES_LIST; do
