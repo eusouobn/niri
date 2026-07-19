@@ -740,20 +740,20 @@ write_gtk_dark "$HOME/.config/gtk-4.0/settings.ini"
 # KDE/Dolphin: forçar Papirus-Dark via kdeglobals
 mkdir -p "$HOME/.config"
 if [ -f "$HOME/.config/kdeglobals" ]; then
-  # Substituir ou adicionar [KDE] IconTheme
-  if grep -q "^IconTheme=" "$HOME/.config/kdeglobals"; then
-    sed -i 's/^IconTheme=.*/IconTheme=Papirus-Dark/' "$HOME/.config/kdeglobals"
-  else
-    if grep -q "^\[KDE\]" "$HOME/.config/kdeglobals"; then
-      sed -i '/^\[KDE\]/a IconTheme=Papirus-Dark' "$HOME/.config/kdeglobals"
+  # Seção [Icons] — onde o Dolphin realmente lê
+  if grep -q "^\[Icons\]" "$HOME/.config/kdeglobals"; then
+    if grep -q "^Theme=" "$HOME/.config/kdeglobals"; then
+      sed -i 's/^Theme=.*/Theme=Papirus-Dark/' "$HOME/.config/kdeglobals"
     else
-      echo -e "\n[KDE]\nIconTheme=Papirus-Dark" >> "$HOME/.config/kdeglobals"
+      sed -i '/^\[Icons\]/a Theme=Papirus-Dark' "$HOME/.config/kdeglobals"
     fi
+  else
+    echo -e "\n[Icons]\nTheme=Papirus-Dark" >> "$HOME/.config/kdeglobals"
   fi
 else
   cat > "$HOME/.config/kdeglobals" << 'KDEEOF'
-[KDE]
-IconTheme=Papirus-Dark
+[Icons]
+Theme=Papirus-Dark
 KDEEOF
 fi
 ok "Dolphin/KDE: Papirus-Dark definido via kdeglobals"
