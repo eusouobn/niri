@@ -42,13 +42,13 @@ Após reiniciar, faça login com seu usuário.
 ```bash
 git clone https://github.com/eusouobn/niri
 cd niri
-bash install-niri.sh
+bash niri.sh
 ```
 
 Ou diretamente (sem clonar):
 
 ```bash
-curl -sS https://raw.githubusercontent.com/eusouobn/niri/main/install-niri.sh | bash
+curl -sS https://raw.githubusercontent.com/eusouobn/niri/main/niri.sh | bash
 ```
 
 **O script faz tudo sozinho:**
@@ -82,7 +82,7 @@ curl -sS https://raw.githubusercontent.com/eusouobn/niri/main/install-niri.sh | 
 
 ```
 niri/
-├── install-niri.sh                   ← Script de instalação completo
+├── niri.sh                           ← Script de instalação completo
 ├── scripts/
 │   └── install.sh                    ← Instalador interativo Arch Linux
 ├── .config/

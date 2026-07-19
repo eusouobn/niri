@@ -5,7 +5,7 @@
 # ──────────────────────────────────────────────
 if [ -z "$BASH_VERSION" ]; then
   echo -e "\033[0;31m✘\033[0m Este script precisa ser executado com bash, não com sh."
-  echo "  Use: bash install-niri.sh"
+  echo "  Use: bash niri.sh"
   exit 1
 fi
 
@@ -1072,7 +1072,7 @@ if [ -n "$MONITORS_FOUND" ]; then
   XSETTINGSD_DPI=$(python3 -c "print(int(96 * $XSETTINGSD_SCALE))" 2>/dev/null || echo "96")
 
   cat > "$HOME/.xsettingsd" << XSETEOF
-# Auto-gerado pelo install-niri.sh
+# Auto-gerado pelo niri.sh
 # Escala detectada: ${XSETTINGSD_SCALE}x (monitor: ${MAX_HEIGHT}p)
 Xft/DPI ${XSETTINGSD_DPI}
 Xft/Antialias 1
@@ -1088,7 +1088,7 @@ else
 
   # Criar ~/.xsettingsd com valores padrão (96 DPI, escala 1.0)
   cat > "$HOME/.xsettingsd" << 'XSETEOF'
-# Auto-gerado pelo install-niri.sh
+# Auto-gerado pelo niri.sh
 # Configuração padrão (sem monitor detectado)
 Xft/DPI 96
 Xft/Antialias 1

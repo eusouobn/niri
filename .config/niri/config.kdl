@@ -372,7 +372,7 @@ binds {
     Mod+Shift+P { power-off-monitors; }
 }
 
-// Blocos output são auto-gerados pelo install-niri.sh
+// Blocos output são auto-gerados pelo niri.sh
 // Para configurar manualmente: bash ~/.config/scripts/monitor-config.sh
 
 hotkey-overlay {
