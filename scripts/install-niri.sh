@@ -315,6 +315,56 @@ ok "Dotfiles baixados do GitHub!"
 quote
 
 # ──────────────────────────────────────────────
+# 5c. Instalar plugins do Noctalia
+# ──────────────────────────────────────────────
+step "🔌 Instalando plugins do Noctalia..."
+
+NOCTALIA_PLUGINS_DIR="$HOME/.config/noctalia/plugins"
+NOCTALIA_PLUGINS_JSON="$HOME/.config/noctalia/plugins.json"
+mkdir -p "$NOCTALIA_PLUGINS_DIR"
+
+# Plugin: Clipper (clipboard manager)
+info "Instalando Clipper..."
+if [ ! -d "$NOCTALIA_PLUGINS_DIR/clipper" ]; then
+  git clone --depth=1 https://github.com/blackbartblues/noctalia-clipper "$NOCTALIA_PLUGINS_DIR/clipper" 2>/dev/null && \
+    ok "Clipper instalado" || warn "Falha ao instalar Clipper"
+else
+  info "Clipper já instalado"
+fi
+
+# Plugin: USB Drive Manager
+info "Instalando USB Drive Manager..."
+if [ ! -d "$NOCTALIA_PLUGINS_DIR/usb-drive-manager" ]; then
+  git clone --depth=1 https://github.com/hennifant/noctalia-shell-usb-widget "$NOCTALIA_PLUGINS_DIR/usb-drive-manager" 2>/dev/null && \
+    ok "USB Drive Manager instalado" || warn "Falha ao instalar USB Drive Manager"
+else
+  info "USB Drive Manager já instalado"
+fi
+
+# Criar/atualizar plugins.json com plugins habilitados
+if [ ! -f "$NOCTALIA_PLUGINS_JSON" ]; then
+  cat > "$NOCTALIA_PLUGINS_JSON" << 'PLUGEOF'
+{
+  "version": 1,
+  "states": {
+    "clipper": {
+      "enabled": true,
+      "sourceUrl": "https://github.com/blackbartblues/noctalia-clipper"
+    },
+    "usb-drive-manager": {
+      "enabled": true,
+      "sourceUrl": "https://github.com/hennifant/noctalia-shell-usb-widget"
+    }
+  },
+  "sources": []
+}
+PLUGEOF
+  ok "plugins.json criado com Clipper e USB Drive Manager habilitados"
+else
+  info "plugins.json já existe — mantendo configuração atual"
+fi
+
+# ──────────────────────────────────────────────
 # 6c. Configuração NVIDIA para Wayland
 # ──────────────────────────────────────────────
 if lspci | grep -qi nvidia; then
