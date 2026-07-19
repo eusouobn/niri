@@ -504,18 +504,11 @@ if [ -n "$MONITORS_FOUND" ]; then
 
   # Remover blocos output existentes do config.kdl (se existir)
   if [ -f "$MONITOR_CONFIG_FILE" ]; then
-    # Usar python3 para remover blocos output existentes
-    python3 -c "
-import re, sys
-with open('$MONITOR_CONFIG_FILE', 'r') as f:
-    content = f.read()
-# Remover todos os blocos output
-content = re.sub(r'output\s+\"[^\"]+\"\s*\{[^}]*\}', '', content)
-# Limpar linhas vazias extras
-content = re.sub(r'\n{3,}', '\n\n', content)
-with open('$MONITOR_CONFIG_FILE', 'w') as f:
-    f.write(content.rstrip() + '\n')
-" 2>/dev/null || true
+    # Usar sed para remover blocos output existentes
+    # Remove linhas desde "output \"..." até a próxima "}"
+    sed -i '/^output "/,/^}/d' "$MONITOR_CONFIG_FILE"
+    # Limpar linhas vazias extras
+    sed -i '/^$/N;/^\n$/d' "$MONITOR_CONFIG_FILE"
   fi
 
   # Adicionar blocos output detectados
