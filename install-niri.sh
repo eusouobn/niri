@@ -356,10 +356,10 @@ import sys, json
 data = json.load(sys.stdin)
 o = data.get('$output', {})
 modes = o.get('modes', [])
-cm = o.get('current_mode', 0)
-if modes and cm < len(modes):
-    m = modes[cm]
-    print(m['width'], m['height'], f\"{m['refresh_rate']/1000:.3f}\")
+if modes:
+    # Pegar o modo com maior refresh rate
+    best = max(modes, key=lambda m: m.get('refresh_rate', 0))
+    print(best['width'], best['height'], f\"{best['refresh_rate']/1000:.3f}\")
 " 2>/dev/null)
     fi
 
@@ -412,13 +412,25 @@ if modes and cm < len(modes):
           fi
         fi
 
-        # Ler refresh rate
+        # Ler refresh rate (maior disponível)
         if [ -z "$refresh" ] && [ -f "${card_dir}modes" ]; then
-          local first_mode
-          first_mode=$(head -1 "${card_dir}modes" 2>/dev/null)
-          if [ -n "$first_mode" ]; then
-            refresh=$(echo "$first_mode" | grep -oP '\d+\.\d+' | head -1)
-          fi
+          local best_refresh="0"
+          while IFS= read -r mode_line; do
+            local mode_refresh
+            mode_refresh=$(echo "$mode_line" | grep -oP '\d+\.\d+' | head -1)
+            if [ -n "$mode_refresh" ]; then
+              # Comparar floats: usar bc se disponível, senão ignorar decimais
+              if command -v bc &>/dev/null; then
+                if [ "$(echo "$mode_refresh > $best_refresh" | bc 2>/dev/null)" = "1" ]; then
+                  best_refresh="$mode_refresh"
+                fi
+              else
+                # Fallback: pegar o último (geralmente o maior)
+                best_refresh="$mode_refresh"
+              fi
+            fi
+          done < "${card_dir}modes"
+          [ "$best_refresh" != "0" ] && refresh="$best_refresh"
         fi
       fi
     fi
