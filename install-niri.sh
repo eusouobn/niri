@@ -993,7 +993,20 @@ XSETEOF
   ok "~/.xsettingsd criado com DPI ${XSETTINGSD_DPI} (escala ${XSETTINGSD_SCALE}x)"
 else
   warn "Nenhum monitor detectado."
-  info "Para configurar manualmente, use: bash ~/.config/scripts/monitor-config.sh"
+  info "Criando .xsettingsd com configuração padrão..."
+
+  # Criar ~/.xsettingsd com valores padrão (96 DPI, escala 1.0)
+  cat > "$HOME/.xsettingsd" << 'XSETEOF'
+# Auto-gerado pelo install-niri.sh
+# Configuração padrão (sem monitor detectado)
+Xft/DPI 96
+Xft/Antialias 1
+Xft/Hinting 1
+Xft/HintStyle hintslight
+Xft/rgba rgb
+XSETEOF
+  ok "~/.xsettingsd criado com DPI padrão (96)"
+  info "Para configurar manualmente: bash ~/.config/scripts/monitor-config.sh"
 fi
 quote
 
