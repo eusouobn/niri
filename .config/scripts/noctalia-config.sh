@@ -204,6 +204,93 @@ ENV
     info "Icon global: $icon_theme (GTK3+GTK4+Qt5+Qt6)"
 }
 
+# Aplicar appearance completo (tema + ícones + fonte) em GTK3+GTK4+Qt5+Qt6+Dolphin+env
+apply_gtk_appearance() {
+    local theme="$1" icon_theme="$2" font="$3" font_size="${4:-12}"
+
+    # GTK3
+    mkdir -p "$(dirname "$GTK_SETTINGS")"
+    cat > "$GTK_SETTINGS" << EOF
+[Settings]
+gtk-theme-name=${theme}
+gtk-icon-theme-name=${icon_theme}
+gtk-font-name=${font} ${font_size}
+gtk-application-prefer-dark-theme=1
+gtk-xft-antialias=1
+gtk-xft-hinting=1
+gtk-xft-hintstyle=hintslight
+gtk-xft-rgba=rgb
+EOF
+    ok "GTK3: tema=${theme} ícones=${icon_theme} fonte=${font}"
+
+    # GTK4
+    mkdir -p "$(dirname "$GTK4_SETTINGS")"
+    cat > "$GTK4_SETTINGS" << EOF
+[Settings]
+gtk-theme-name=${theme}
+gtk-icon-theme-name=${icon_theme}
+gtk-font-name=${font} ${font_size}
+gtk-application-prefer-dark-theme=1
+gtk-xft-antialias=1
+gtk-xft-hinting=1
+gtk-xft-hintstyle=hintslight
+gtk-xft-rgba=rgb
+EOF
+    ok "GTK4: tema=${theme} ícones=${icon_theme} fonte=${font}"
+
+    # Qt5
+    local qt5_conf="${HOME}/.config/qt5ct/qt5ct.conf"
+    if [[ -f "$qt5_conf" ]]; then
+        if grep -q "icon_theme" "$qt5_conf" 2>/dev/null; then
+            sed -i "s/^icon_theme\s*=.*/icon_theme = ${icon_theme}/" "$qt5_conf"
+        fi
+        ok "Qt5 ícones: ${icon_theme}"
+    fi
+
+    # Qt6
+    local qt6_conf="${HOME}/.config/qt6ct/qt6ct.conf"
+    if [[ -f "$qt6_conf" ]]; then
+        if grep -q "icon_theme" "$qt6_conf" 2>/dev/null; then
+            sed -i "s/^icon_theme\s*=.*/icon_theme = ${icon_theme}/" "$qt6_conf"
+        fi
+        ok "Qt6 ícones: ${icon_theme}"
+    fi
+
+    # Dolphin/KDE (kdeglobals)
+    mkdir -p "$HOME/.config"
+    if [[ -f "$HOME/.config/kdeglobals" ]]; then
+        if grep -q "^\[Icons\]" "$HOME/.config/kdeglobals"; then
+            if grep -q "^Theme=" "$HOME/.config/kdeglobals"; then
+                sed -i "s/^Theme=.*/Theme=${icon_theme}/" "$HOME/.config/kdeglobals"
+            else
+                sed -i "/^\[Icons\]/a Theme=${icon_theme}" "$HOME/.config/kdeglobals"
+            fi
+        else
+            echo -e "\n[Icons]\nTheme=${icon_theme}" >> "$HOME/.config/kdeglobals"
+        fi
+    else
+        cat > "$HOME/.config/kdeglobals" << EOF
+[Icons]
+Theme=${icon_theme}
+EOF
+    fi
+    ok "Dolphin: ${icon_theme}"
+
+    # environment.d (GTK_THEME)
+    local env_d="${HOME}/.config/environment.d/10-kde-on-niri.conf"
+    mkdir -p "$(dirname "$env_d")"
+    if [[ -f "$env_d" ]]; then
+        if grep -q "^GTK_THEME=" "$env_d" 2>/dev/null; then
+            sed -i "s/^GTK_THEME=.*/GTK_THEME=${theme}/" "$env_d"
+        else
+            echo "GTK_THEME=${theme}" >> "$env_d"
+        fi
+    else
+        echo "GTK_THEME=${theme}" > "$env_d"
+    fi
+    ok "environment.d: GTK_THEME=${theme}"
+}
+
 apply_env_vars() {
     local icon_th="$1" cursor_th="$2"
     ensure_dir
@@ -236,6 +323,14 @@ THEMES_LIST=(
     "Noctalia" "Catppuccin" "Dracula" "Gruvbox"
     "Nord" "Tokyo-Night" "Ayu" "Eldritch"
     "Kanagawa" "Rose Pine"
+)
+
+GTK_THEMES_LIST=(
+    "adw-gtk3-dark" "adw-gtk3-light"
+    "Orchis-Dark" "Orchis-Light"
+    "Colloid-Dark" "Colloid-Light"
+    "Catppuccin-Mocha-Standard-Dark" "Catppuccin-Mocha-Standard-Lite"
+    "Dracula" "Nordic-Darker" "Tokyonight-Dark-BL"
 )
 
 WEIGHT_LIST=(
@@ -574,6 +669,53 @@ menu_icon_theme() {
     maybe_reload
 }
 
+menu_appearance() {
+    header
+    echo -e "${W}${BD}  APPEARANCE (TEMAS + ÍCONES + FONTE)${D}"
+    echo ""
+
+    echo -e "${W}${BD}  TEMA GTK:${D}"
+    pick "Tema" "${GTK_THEMES_LIST[@]}"
+    local theme="$_CHOICE"
+    info "Tema: $theme"
+
+    echo ""
+    echo -e "${W}${BD}  ICON THEME:${D}"
+    pick "Ícones" "${ICONS_LIST[@]}"
+    local icons="$_CHOICE"
+    info "Ícones: $icons"
+
+    echo ""
+    echo -e "${W}${BD}  FONTE:${D}"
+    pick "Fonte" "${FONTS_LIST[@]}"
+    local font="$_CHOICE"
+    info "Fonte: $font"
+
+    echo ""
+    echo -e "${W}${BD}  TAMANHO DA FONTE:${D}"
+    pick_num "Tamanho" "12" "8" "24"
+    local size="$_CHOICE"
+    info "Tamanho: $size"
+
+    echo ""
+    echo -e "${W}${BD}  RESUMO:${D}"
+    echo ""
+    echo -e "  Tema GTK:   ${G}${theme}${D}"
+    echo -e "  Ícones:     ${G}${icons}${D}"
+    echo -e "  Fonte:      ${G}${font}${D}"
+    echo -e "  Tamanho:    ${G}${size}${D}"
+    echo ""
+
+    if confirm "Aplicar appearance?"; then
+        ensure_dir
+        do_backup
+        apply_gtk_appearance "$theme" "$icons" "$font" "$size"
+        echo ""
+        info "Appearance aplicado!"
+        maybe_reload
+    fi
+}
+
 menu_cursor() {
     header
     echo -e "${W}${BD}  CURSOR THEMES:${D}"
@@ -602,8 +744,10 @@ menu_status() {
         echo -e "  Fonte Noctalia: ${C}$(json_get "$CONFIG_FILE" "ui.fontDefault")${D}"
     fi
     if [[ -f "$GTK_SETTINGS" ]]; then
+        local gt=$(grep "^gtk-theme-name" "$GTK_SETTINGS" 2>/dev/null | cut -d= -f2)
         local gf=$(grep "^gtk-font-name" "$GTK_SETTINGS" 2>/dev/null | cut -d= -f2)
         local gi=$(grep "^gtk-icon-theme-name" "$GTK_SETTINGS" 2>/dev/null | cut -d= -f2)
+        [[ -n "$gt" ]] && echo -e "  Tema GTK:       ${C}${gt}${D}"
         [[ -n "$gf" ]] && echo -e "  Fonte GTK:      ${C}${gf}${D}"
         [[ -n "$gi" ]] && echo -e "  Icon GTK:       ${C}${gi}${D}"
     fi
@@ -790,9 +934,10 @@ main_menu() {
         echo -e "  ${G}7${D})  Mudar velocidade de animacao"
         echo -e "  ${G}8${D})  Mudar transparencia"
         echo ""
-        echo -e "  ${M}--- GTK / Icones / Cursor ---${D}"
-        echo -e "  ${G}9${D})  Mudar icon theme (GTK+Qt global)"
-        echo -e "  ${G}10${D}) Mudar cursor theme"
+        echo -e "  ${M}--- GTK / Appearance ---${D}"
+        echo -e "  ${G}9${D})  Appearance completo (tema+ícones+fonte)"
+        echo -e "  ${G}10${D}) Mudar icon theme (só ícones)"
+        echo -e "  ${G}11${D}) Mudar cursor theme"
         echo ""
         echo -e "  ${M}--- Outros ---${D}"
         echo -e "  ${G}s${D})  Ver status atual"
@@ -812,8 +957,9 @@ main_menu() {
             6)  menu_corner ;;
             7)  menu_anim ;;
             8)  menu_transparency ;;
-            9)  menu_icon_theme ;;
-            10) menu_cursor ;;
+            9)  menu_appearance ;;
+            10) menu_icon_theme ;;
+            11) menu_cursor ;;
             s|S) menu_status ;;
             e|E) menu_export ;;
             r|R) reload_shell; press_enter ;;
@@ -888,6 +1034,15 @@ cli_mode() {
             do_backup
             apply_icons_global "${2:-Papirus}"
             ;;
+        --appearance)
+            ensure_dir
+            do_backup
+            local theme="${2:-adw-gtk3-dark}"
+            local icons="${3:-Papirus-Dark}"
+            local font="${4:-Ubuntu Bold}"
+            local size="${5:-12}"
+            apply_gtk_appearance "$theme" "$icons" "$font" "$size"
+            ;;
         --cursor)
             apply_env_vars "" "${2:-Bibata-Modern-Ice}"
             ;;
@@ -920,6 +1075,8 @@ Uso: noctalia-config.sh [OPCAO] [VALOR]
   --anim-speed <vel|off>       Velocidade (0.5-2.0) ou "off" pra desligar
   --corner-radius <raio>       Raio dos cantos (0.0-2.0)
   --icon-theme <nome>          Definir icon global (GTK+Qt)
+  --appearance <tema> <ícones> <fonte> <tamanho>
+                               Definir appearance completo (tema+ícones+fonte)
   --cursor <nome>              Definir cursor
   --status                     Ver config
   --help                       Ajuda
