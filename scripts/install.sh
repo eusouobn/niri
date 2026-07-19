@@ -598,23 +598,25 @@ case "$DE" in
     arch-chroot /mnt pacman -S --noconfirm $BASE_PKGS
     arch-chroot /mnt systemctl enable NetworkManager
 
-    # Copiar scripts para o sistema instalado
-    info "Copiando scripts para /mnt..."
-    mkdir -p /mnt/root/scripts
+    # Copiar scripts para home do usuário (sem precisar de sudo)
+    info "Copiando scripts para /mnt/home/$USERNAME/scripts..."
+    mkdir -p "/mnt/home/$USERNAME/scripts"
 
     # Copiar install-niri.sh do repo (se disponível)
     if [ -f /root/scripts/install-niri.sh ]; then
-      cp /root/scripts/install-niri.sh /mnt/root/scripts/
+      cp /root/scripts/install-niri.sh "/mnt/home/$USERNAME/scripts/"
+      chroot /mnt chown "$USERNAME:users" "/home/$USERNAME/scripts/install-niri.sh"
       ok "install-niri.sh copiado"
     fi
 
     # Copiar optimize-io.sh se disponível
     if [ -f /root/scripts/optimize-io.sh ]; then
-      cp /root/scripts/optimize-io.sh /mnt/root/scripts/
+      cp /root/scripts/optimize-io.sh "/mnt/home/$USERNAME/scripts/"
+      chroot /mnt chown "$USERNAME:users" "/home/$USERNAME/scripts/optimize-io.sh"
       ok "optimize-io.sh copiado"
     fi
 
-    warn "Após reiniciar, execute: sudo bash ~/scripts/install-niri.sh"
+    warn "Após reiniciar, execute: bash ~/scripts/install-niri.sh"
     ;;
 esac
 
@@ -715,7 +717,7 @@ echo ""
 if [ "$DE" = "Niri" ]; then
   echo -e "  ${YELLOW}Após reiniciar:${NC}"
   echo -e "  1. Faça login como $USERNAME"
-  echo -e "  2. Execute: ${BOLD}sudo bash ~/scripts/install-niri.sh${NC}"
+  echo -e "  2. Execute: ${BOLD}bash ~/scripts/install-niri.sh${NC}"
   echo ""
 fi
 
