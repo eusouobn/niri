@@ -286,23 +286,33 @@ ok "Nerd Fonts instaladas — seu terminal nunca mais será o mesmo"
 quote
 
 # ──────────────────────────────────────────────
-# 6a. Clonar dotfiles do GitHub (ANTES de detectar monitores)
+# 6a. Clonar dotfiles do GitHub (sempre sobrescrever)
 # ──────────────────────────────────────────────
-if [ -n "$PENDRIVE" ] && [ -f "$PENDRIVE/niri.tar.gz" ]; then
-  step "📂 Restaurando configurações do pendrive..."
-  tar -xzf "$PENDRIVE/niri.tar.gz" -C "$HOME/.config"
-  ok "Configurações restauradas do pendrive"
-  quote
-elif [ ! -d "$HOME/.config/niri" ]; then
-  step "📥 Clonando dotfiles do GitHub..."
-  info "Baixando de https://github.com/eusouobn/niri.git"
-  echo ""
-  git clone https://github.com/eusouobn/niri.git /tmp/niri-dotfiles
-  cp -r /tmp/niri-dotfiles/.config/* "$HOME/.config/"
-  rm -rf /tmp/niri-dotfiles
-  ok "Dotfiles clonados do GitHub!"
-  quote
+step "📥 Baixando dotfiles do GitHub..."
+info "De https://github.com/eusouobn/niri.git"
+echo ""
+
+# Backup do config.kdl se existir
+if [ -f "$HOME/.config/niri/config.kdl" ]; then
+  cp "$HOME/.config/niri/config.kdl" /tmp/config.kdl.backup
+  ok "Backup do config.kdl salvo"
 fi
+
+# Clonar e copiar (sempre sobrescreve)
+git clone https://github.com/eusouobn/niri.git /tmp/niri-dotfiles
+mkdir -p "$HOME/.config"
+cp -r /tmp/niri-dotfiles/.config/* "$HOME/.config/"
+rm -rf /tmp/niri-dotfiles
+
+# Restaurar backup do config.kdl se existia
+if [ -f /tmp/config.kdl.backup ]; then
+  cp /tmp/config.kdl.backup "$HOME/.config/niri/config.kdl"
+  rm /tmp/config.kdl.backup
+  ok "config.kdl restaurado do backup"
+fi
+
+ok "Dotfiles baixados do GitHub!"
+quote
 
 # ──────────────────────────────────────────────
 # 6c. Configuração NVIDIA para Wayland
