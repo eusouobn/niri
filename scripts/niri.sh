@@ -323,11 +323,19 @@ NOCTALIA_PLUGINS_DIR="$HOME/.config/noctalia/plugins"
 NOCTALIA_PLUGINS_JSON="$HOME/.config/noctalia/plugins.json"
 mkdir -p "$NOCTALIA_PLUGINS_DIR"
 
-# Plugin: Clipper (clipboard manager)
+# Plugin: Clipper (clipboard manager) — do repo oficial
 info "Instalando Clipper..."
 if [ ! -d "$NOCTALIA_PLUGINS_DIR/clipper" ]; then
-  git clone --depth=1 https://github.com/blackbartblues/noctalia-clipper "$NOCTALIA_PLUGINS_DIR/clipper" 2>/dev/null && \
-    ok "Clipper instalado" || warn "Falha ao instalar Clipper"
+  TMPCLONE=$(mktemp -d)
+  if git clone --depth=1 --filter=blob:none --sparse https://github.com/noctalia-dev/noctalia-plugins "$TMPCLONE" 2>/dev/null; then
+    cd "$TMPCLONE" && git sparse-checkout set clipper 2>/dev/null
+    cp -r "$TMPCLONE/clipper" "$NOCTALIA_PLUGINS_DIR/clipper"
+    cd /tmp && rm -rf "$TMPCLONE"
+    ok "Clipper instalado"
+  else
+    rm -rf "$TMPCLONE"
+    warn "Falha ao instalar Clipper"
+  fi
 else
   info "Clipper já instalado"
 fi
@@ -349,7 +357,7 @@ plugins_file = '$NOCTALIA_PLUGINS_JSON'
 new_plugins = {
     'clipper': {
         'enabled': True,
-        'sourceUrl': 'https://github.com/blackbartblues/noctalia-clipper'
+        'sourceUrl': 'https://github.com/noctalia-dev/noctalia-plugins'
     },
     'usb-drive-manager': {
         'enabled': True,
