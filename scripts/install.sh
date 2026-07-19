@@ -161,12 +161,12 @@ echo "  Para notebooks híbridos, selecione o driver do vídeo onboard"
 echo ""
 
 PS3=$'\n  Driver primário: '
-select VIDEODRIVER in AMDGPU ATI INTEL Nouveau Nvidia VMware; do
+select VIDEODRIVER in AMDGPU ATI INTEL Nouveau Nvidia Nvidia-Open VMware; do
   [ -n "$VIDEODRIVER" ] && break
 done
 
 PS3=$'\n  Driver secundário (NENHUM se só tem 1 GPU): '
-select SECVID in NENHUM AMDGPU ATI INTEL Nouveau Nvidia VMware; do
+select SECVID in NENHUM AMDGPU ATI INTEL Nouveau Nvidia Nvidia-Open VMware; do
   [ -n "$SECVID" ] && break
 done
 
@@ -393,8 +393,18 @@ arch-chroot /mnt pacman -Sy --noconfirm \
 # ── Driver de vídeo ────────────────────────────────────────
 info "Instalando driver de vídeo..."
 
-DRIVER_LOWER=$(echo "$VIDEODRIVER" | tr '[:upper:]' '[:lower:]')
-arch-chroot /mnt pacman -S --noconfirm "xf86-video-$DRIVER_LOWER"
+case "$VIDEODRIVER" in
+  Nvidia)
+    arch-chroot /mnt pacman -S --noconfirm nvidia nvidia-utils lib32-nvidia-utils
+    ;;
+  Nvidia-Open)
+    arch-chroot /mnt pacman -S --noconfirm nvidia-open nvidia-utils lib32-nvidia-utils
+    ;;
+  *)
+    DRIVER_LOWER=$(echo "$VIDEODRIVER" | tr '[:upper:]' '[:lower:]')
+    arch-chroot /mnt pacman -S --noconfirm "xf86-video-$DRIVER_LOWER"
+    ;;
+esac
 
 # Vulkan
 case "$VIDEODRIVER" in
@@ -409,6 +419,10 @@ case "$VIDEODRIVER" in
       vulkan-intel vulkan-mesa-layers libva-intel-driver \
       lib32-mesa lib32-vulkan-intel lib32-vulkan-mesa-layers \
       lib32-libva-intel-driver mesa-demos mesa-utils
+    ;;
+  Nvidia|Nvidia-Open)
+    arch-chroot /mnt pacman -S --noconfirm \
+      nvidia-utils lib32-nvidia-utils vulkan-icd-loader lib32-vulkan-icd-loader
     ;;
 esac
 
