@@ -19,8 +19,8 @@ fail()   { echo -e "  ${RED}✖${NC} $1"; exit 1; }
 quote()  { echo -e "\n  ─────────────────────────────────────\n"; }
 
 # ── Verificações iniciais ──────────────────────────────────
-if [ "$EUID" -eq 0 ]; then
-  echo "❌ Não execute com sudo. Execute como usuário normal."
+if [ "$EUID" -ne 0 ]; then
+  echo "❌ Execute com sudo: sudo bash install.sh"
   exit 1
 fi
 
