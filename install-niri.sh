@@ -688,7 +688,7 @@ sudo sysctl -w vm.dirty_ratio=5 > /dev/null
 sudo sysctl -w vm.dirty_background_ratio=2 > /dev/null
 sudo sysctl -w vm.dirty_writeback_centisecs=300 > /dev/null
 sudo sysctl -w vm.dirty_expire_centisecs=1500 > /dev/null
-sudo sysctl -w vm.dirty_ratio_bytes=134217728 > /dev/null
+[ -f /proc/sys/vm/dirty_ratio_bytes ] && sudo sysctl -w vm.dirty_ratio_bytes=134217728 > /dev/null
 sudo sysctl -w vm.page-cluster=3 > /dev/null
 sudo sysctl -w vm.vfs_cache_pressure=50 > /dev/null
 
