@@ -158,9 +158,9 @@ apply_icons_global() {
 
     # Qt5
     local qt5_conf="${HOME}/.config/qt5ct/qt5ct.conf"
-    if [[ -f "$qt5_conf" ]]; then
-        if grep -q "icon_theme" "$qt5_conf" 2>/dev/null; then
-            python3 -c "
+    mkdir -p "$(dirname "$qt5_conf")"
+    if [[ -f "$qt5_conf" ]] && grep -q "icon_theme" "$qt5_conf" 2>/dev/null; then
+        python3 -c "
 import sys, re
 lines = open(sys.argv[1]).readlines()
 with open(sys.argv[1], 'w') as f:
@@ -170,15 +170,16 @@ with open(sys.argv[1], 'w') as f:
         else:
             f.write(l)
 " "$qt5_conf" "$icon_theme"
-        fi
-        info "Qt5 icon: $icon_theme"
+    else
+        echo "icon_theme = ${icon_theme}" >> "$qt5_conf"
     fi
+    info "Qt5 icon: $icon_theme"
 
     # Qt6
     local qt6_conf="${HOME}/.config/qt6ct/qt6ct.conf"
-    if [[ -f "$qt6_conf" ]]; then
-        if grep -q "icon_theme" "$qt6_conf" 2>/dev/null; then
-            python3 -c "
+    mkdir -p "$(dirname "$qt6_conf")"
+    if [[ -f "$qt6_conf" ]] && grep -q "icon_theme" "$qt6_conf" 2>/dev/null; then
+        python3 -c "
 import sys, re
 lines = open(sys.argv[1]).readlines()
 with open(sys.argv[1], 'w') as f:
@@ -188,9 +189,10 @@ with open(sys.argv[1], 'w') as f:
         else:
             f.write(l)
 " "$qt6_conf" "$icon_theme"
-        fi
-        info "Qt6 icon: $icon_theme"
+    else
+        echo "icon_theme = ${icon_theme}" >> "$qt6_conf"
     fi
+    info "Qt6 icon: $icon_theme"
 
     # Env vars
     ensure_dir
@@ -240,21 +242,23 @@ EOF
 
     # Qt5
     local qt5_conf="${HOME}/.config/qt5ct/qt5ct.conf"
-    if [[ -f "$qt5_conf" ]]; then
-        if grep -q "icon_theme" "$qt5_conf" 2>/dev/null; then
-            sed -i "s/^icon_theme\s*=.*/icon_theme = ${icon_theme}/" "$qt5_conf"
-        fi
-        ok "Qt5 ícones: ${icon_theme}"
+    mkdir -p "$(dirname "$qt5_conf")"
+    if [[ -f "$qt5_conf" ]] && grep -q "icon_theme" "$qt5_conf" 2>/dev/null; then
+        sed -i "s/^icon_theme\s*=.*/icon_theme = ${icon_theme}/" "$qt5_conf"
+    else
+        echo "icon_theme = ${icon_theme}" >> "$qt5_conf"
     fi
+    ok "Qt5 ícones: ${icon_theme}"
 
     # Qt6
     local qt6_conf="${HOME}/.config/qt6ct/qt6ct.conf"
-    if [[ -f "$qt6_conf" ]]; then
-        if grep -q "icon_theme" "$qt6_conf" 2>/dev/null; then
-            sed -i "s/^icon_theme\s*=.*/icon_theme = ${icon_theme}/" "$qt6_conf"
-        fi
-        ok "Qt6 ícones: ${icon_theme}"
+    mkdir -p "$(dirname "$qt6_conf")"
+    if [[ -f "$qt6_conf" ]] && grep -q "icon_theme" "$qt6_conf" 2>/dev/null; then
+        sed -i "s/^icon_theme\s*=.*/icon_theme = ${icon_theme}/" "$qt6_conf"
+    else
+        echo "icon_theme = ${icon_theme}" >> "$qt6_conf"
     fi
+    ok "Qt6 ícones: ${icon_theme}"
 
     # Dolphin/KDE (kdeglobals)
     mkdir -p "$HOME/.config"
