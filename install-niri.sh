@@ -193,7 +193,7 @@ OFFICIAL_PACKAGES=(
   jfsutils f2fs-tools udftools e2fsprogs gvfs
   fzf ripgrep jq zenity wlr-randr
   nm-connection-editor upower udisks2 gnome-autoar smbclient
-  swayidle
+  swayidle xxd
 )
 
 step "📦 Instalando pacotes oficiais..."
@@ -432,7 +432,6 @@ if [ -n "$MONITORS_FOUND" ]; then
     local_refresh=$(echo "$line" | awk '{print $3}')
     local_width=$(echo "$local_res" | cut -d'x' -f1)
     local_height=$(echo "$local_res" | cut -d'x' -f2)
-    local_scale
     local_scale=$(get_scale_for_height "$local_height")
 
     # Rastrear maior resolução para xsettingsd
