@@ -211,15 +211,61 @@ fi
 # 7. DRIVER DE VÍDEO
 # ══════════════════════════════════════════════════════════
 title "7/12 — DRIVER DE VÍDEO"
-echo "  Para notebooks híbridos, selecione o driver do vídeo onboard"
+
+# Auto-detectar GPU
+GPU_INFO=$(lspci | grep -i "vga\|3d\|display" 2>/dev/null || true)
+HAS_NVIDIA=$(echo "$GPU_INFO" | grep -ci nvidia || true)
+HAS_AMD=$(echo "$GPU_INFO" | grep -ci "amd\|radeon" || true)
+HAS_INTEL=$(echo "$GPU_INFO" | grep -ci intel || true)
+
+if [ "$HAS_NVIDIA" -gt 0 ]; then
+  echo -e "  ${BOLD}NVIDIA detectada!${NC}"
+  echo ""
+  echo "  Driver recomendado para Wayland/Niri:"
+  echo "    1) Nvidia-Open  (recomendado — open-source)"
+  echo "    2) Nvidia       (proprietário clássico)"
+  echo "    3) Nouveau      (open-source genérico)"
+  echo "    4) Outro driver"
+  echo ""
+
+  PS3=$'\n  Selecione: '
+  select GPU_CHOICE in "Nvidia-Open" "Nvidia" "Nouveau" "Outro"; do
+    [ -n "$GPU_CHOICE" ] && break
+  done
+
+  if [ "$GPU_CHOICE" = "Outro" ]; then
+    echo ""
+    echo "  Drivers disponíveis: AMDGPU, ATI, INTEL, Nouveau, Nvidia, Nvidia-Open, VMware"
+    PS3=$'\n  Driver: '
+    select VIDEODRIVER in AMDGPU ATI INTEL Nouveau Nvidia Nvidia-Open VMware; do
+      [ -n "$VIDEODRIVER" ] && break
+    done
+  else
+    VIDEODRIVER="$GPU_CHOICE"
+  fi
+else
+  echo -e "  GPU: ${GPU_INFO%% *}"
+  echo ""
+
+  if [ "$HAS_AMD" -gt 0 ]; then
+    echo "  AMD detectada — driver recomendado: AMDGPU"
+  elif [ "$HAS_INTEL" -gt 0 ]; then
+    echo "  Intel detectada — driver recomendado: INTEL"
+  fi
+  echo ""
+
+  PS3=$'\n  Driver: '
+  select VIDEODRIVER in AMDGPU ATI INTEL Nouveau Nvidia Nvidia-Open VMware; do
+    [ -n "$VIDEODRIVER" ] && break
+  done
+fi
+
+ok "Driver: $VIDEODRIVER"
+
+# GPU secundária (notebooks híbridos)
 echo ""
-
-PS3=$'\n  Driver primário: '
-select VIDEODRIVER in AMDGPU ATI INTEL Nouveau Nvidia Nvidia-Open VMware; do
-  [ -n "$VIDEODRIVER" ] && break
-done
-
-PS3=$'\n  Driver secundário (NENHUM se só tem 1 GPU): '
+echo "  Possui GPU dedicada + integrada? (Optimus/híbrido)"
+PS3=$'\n  GPU secundária: '
 select SECVID in NENHUM AMDGPU ATI INTEL Nouveau Nvidia Nvidia-Open VMware; do
   [ -n "$SECVID" ] && break
 done
