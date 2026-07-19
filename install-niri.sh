@@ -825,7 +825,7 @@ LOGIND
 ok "systemd-logind configurado: sem suspensão automática"
 
 # Configurar swayidle para desligar monitor após 30 minutos
-mkdir -p "$HOME/.config"
+mkdir -p "$HOME/.config/scripts"
 
 # Criar script de idle management
 cat > "$HOME/.config/scripts/swayidle-handler.sh" << 'IDLEEOF'
