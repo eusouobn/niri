@@ -231,9 +231,22 @@ info "Niri-tearing-git, NiriMod, Noctalia Shell, temas e fontes Microsoft..."
 info "Confira o progresso abaixo:"
 echo ""
 
+# Verificar se yay está instalado
+if ! command -v yay &>/dev/null; then
+  warn "yay não encontrado — instalando..."
+  sudo pacman -S --needed --noconfirm yay
+fi
+
 yay -S --needed --noconfirm "${AUR_PACKAGES[@]}"
 echo ""
-ok "Pacotes AUR instalados"
+
+# Verificar se Noctalia foi instalado
+if command -v qs &>/dev/null; then
+  ok "Pacotes AUR instalados (incluindo Noctalia Shell)"
+else
+  warn "Noctalia Shell pode não ter sido instalado"
+  info "Tente manualmente: yay -S noctalia-shell noctalia-qs"
+fi
 quote
 
 # ──────────────────────────────────────────────
