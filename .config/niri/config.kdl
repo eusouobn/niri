@@ -355,9 +355,9 @@ binds {
     Mod+W { toggle-column-tabbed-display; }
 
     Print { spawn-sh "bash ~/.config/scripts/screenshot-screen.sh"; }
-    Shift+Print { spawn-sh "bash ~/.config/scripts/screenshot-timer.sh"; }
+    Shift+Print { spawn-sh "bash ~/.config/scripts/screenshot-window.sh"; }
     Ctrl+Print { spawn-sh "bash ~/.config/scripts/screenshot-area.sh"; }
-    Alt+Print { spawn-sh "bash ~/.config/scripts/screenshot-window.sh"; }
+    Alt+Print { spawn-sh "bash ~/.config/scripts/screenshot-timer.sh"; }
     Super+Print { spawn-sh "bash ~/.config/scripts/screenshot-dual.sh"; }
 
     Mod+Ctrl+S { spawn-sh "wl-paste | satty -f -"; }
