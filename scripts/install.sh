@@ -349,14 +349,11 @@ if [ "$SWAPTYPE" = "Arquivo" ]; then
   fi
   chmod 600 /mnt/swapfile
   mkswap /mnt/swapfile
-  swapon /mnt/swapfile
-  echo "/swapfile none swap defaults 0 0" >> /mnt/etc/fstab
-  ok "Swap em arquivo: ${SWAP_SIZE}GB"
+  ok "Swap em arquivo: ${SWAP_SIZE}GB (será ativado no boot)"
 else
   echo "zram" > /mnt/etc/modules-load.d/zram.conf
   echo "options zram num_devices=1" > /mnt/etc/modprobe.d/zram.conf
   echo "KERNEL==\"zram0\", ATTR{disksize}=\"${SWAP_SIZE}G\" RUN=\"/usr/bin/mkswap /dev/zram0\", TAG+=\"systemd\"" > /mnt/etc/udev/rules.d/99-zram.rules
-  echo "/dev/zram0 none swap defaults 0 0" >> /mnt/etc/fstab
   ok "Swap ZRAM: ${SWAP_SIZE}GB"
 fi
 
@@ -371,6 +368,14 @@ ok "Sistema base instalado"
 
 # ── fstab ──────────────────────────────────────────────────
 genfstab -U /mnt > /mnt/etc/fstab
+
+# Adicionar swap no fstab (depois do genfstab)
+if [ "$SWAPTYPE" = "Arquivo" ]; then
+  echo "/swapfile none swap defaults 0 0" >> /mnt/etc/fstab
+else
+  echo "/dev/zram0 none swap defaults 0 0" >> /mnt/etc/fstab
+fi
+
 ok "fstab gerado"
 
 # ── Inside chroot ──────────────────────────────────────────
