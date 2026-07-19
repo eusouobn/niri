@@ -305,243 +305,6 @@ elif [ ! -d "$HOME/.config/niri" ]; then
 fi
 
 # ──────────────────────────────────────────────
-# 6b. Auto-detecção de monitor + escala
-# ──────────────────────────────────────────────
-step "🖥️ Detectando monitores e configurando escala..."
-
-# Função: detectar monitores via niri (se rodando) ou kernel DRM
-detect_monitors() {
-  local monitors=()
-
-  # Tentar via niri msg (funciona se niri já estiver rodando)
-  if command -v niri &>/dev/null && niri msg outputs &>/dev/null 2>&1; then
-    while IFS= read -r name; do
-      [ -n "$name" ] && monitors+=("$name")
-    done < <(niri msg -j outputs 2>/dev/null | python3 -c "
-import sys, json
-data = json.load(sys.stdin)
-for name in data:
-    print(name)
-" 2>/dev/null)
-  fi
-
-  # Fallback: detectar via kernel DRM (funciona antes do niri iniciar)
-  if [ ${#monitors[@]} -eq 0 ]; then
-    for card in /sys/class/drm/card*-*/; do
-      [ -d "$card" ] || continue
-      local status_file="${card}status"
-      [ -f "$status_file" ] || continue
-      local status
-      status=$(cat "$status_file" 2>/dev/null)
-      [ "$status" = "connected" ] || continue
-      local output_name
-      output_name=$(basename "$card" | sed 's/card[0-9]*-//')
-      monitors+=("$output_name")
-    done
-  fi
-
-  if [ ${#monitors[@]} -eq 0 ]; then
-    echo ""
-    return 1
-  fi
-
-  # Para cada monitor detectado, pegar resolução e refresh rate
-  for output in "${monitors[@]}"; do
-    local width="" height="" refresh=""
-
-    # Tentar via niri msg
-    if command -v niri &>/dev/null && niri msg outputs &>/dev/null 2>&1; then
-      read -r width height refresh < <(niri msg -j outputs 2>/dev/null | python3 -c "
-import sys, json
-data = json.load(sys.stdin)
-o = data.get('$output', {})
-modes = o.get('modes', [])
-if modes:
-    # Pegar o modo com maior refresh rate
-    best = max(modes, key=lambda m: m.get('refresh_rate', 0))
-    print(best['width'], best['height'], f\"{best['refresh_rate']/1000:.3f}\")
-" 2>/dev/null)
-    fi
-
-    # Fallback: kernel DRM
-    if [ -z "$width" ]; then
-      local card_dir=""
-      for card in /sys/class/drm/card*-*/; do
-        [ -d "$card" ] || continue
-        local out_name
-        out_name=$(basename "$card" | sed 's/card[0-9]*-//')
-        if [ "$out_name" = "$output" ]; then
-          card_dir="$card"
-          break
-        fi
-      done
-
-      if [ -n "$card_dir" ]; then
-        # Ler EDID para resolução nativa
-        if [ -f "${card_dir}edid" ]; then
-          local edid_hex
-          edid_hex=$(xxd -p "${card_dir}edid" 2>/dev/null)
-          local edid_bin
-          edid_bin=$(echo "$edid_hex" | xxd -r -p 2>/dev/null)
-
-          # Procurar por descriptor com resolução
-          local i
-          for i in 54 72 90 108 126; do
-            local tag
-            tag=$(echo "$edid_bin" | dd bs=1 count=1 skip=$i 2>/dev/null | xxd -p)
-            if [ "$tag" = "000000000000" ]; then
-              local w h
-              w=$(printf '%d' "0x$(echo "$edid_bin" | dd bs=1 count=1 skip=$((i+2)) 2>/dev/null | xxd -p)")
-              h=$(printf '%d' "0x$(echo "$edid_bin" | dd bs=1 count=1 skip=$((i+1)) 2>/dev/null | xxd -p)")
-              if [ "$w" -gt 0 ] && [ "$h" -gt 0 ]; then
-                width=$w
-                height=$h
-                break
-              fi
-            fi
-          done
-        fi
-
-        # Fallback: ler preferred mode do kernel
-        if [ -z "$width" ] && [ -f "${card_dir}modes" ]; then
-          local first_mode
-          first_mode=$(head -1 "${card_dir}modes" 2>/dev/null)
-          if [ -n "$first_mode" ]; then
-            width=$(echo "$first_mode" | cut -d'x' -f1)
-            height=$(echo "$first_mode" | cut -d'x' -f2 | cut -d' ' -f1)
-          fi
-        fi
-
-        # Ler refresh rate (maior disponível)
-        if [ -z "$refresh" ] && [ -f "${card_dir}modes" ]; then
-          local best_refresh="0"
-          while IFS= read -r mode_line; do
-            local mode_refresh
-            mode_refresh=$(echo "$mode_line" | grep -oP '\d+\.\d+' | head -1)
-            if [ -n "$mode_refresh" ]; then
-              # Comparar floats: usar bc se disponível, senão ignorar decimais
-              if command -v bc &>/dev/null; then
-                if [ "$(echo "$mode_refresh > $best_refresh" | bc 2>/dev/null)" = "1" ]; then
-                  best_refresh="$mode_refresh"
-                fi
-              else
-                # Fallback: pegar o último (geralmente o maior)
-                best_refresh="$mode_refresh"
-              fi
-            fi
-          done < "${card_dir}modes"
-          [ "$best_refresh" != "0" ] && refresh="$best_refresh"
-        fi
-      fi
-    fi
-
-    [ -n "$width" ] && [ -n "$height" ] && echo "$output ${width}x${height} ${refresh:-60.000}"
-  done
-}
-
-# Função: calcular escala baseada na resolução vertical
-get_scale_for_height() {
-  local height="$1"
-  if [ "$height" -ge 2160 ]; then
-    echo "2.0"
-  elif [ "$height" -ge 1440 ]; then
-    echo "1.5"
-  else
-    echo "1.0"
-  fi
-}
-
-# Detectar monitores
-MONITORS_FOUND=$(detect_monitors) || true
-
-if [ -n "$MONITORS_FOUND" ]; then
-  info "Monitores detectados:"
-  echo "$MONITORS_FOUND" | while read -r line; do
-    info "  $line"
-  done
-  echo ""
-
-  # Gerar blocos output para config.kdl
-  NIRI_CONFIG_DIR="$HOME/.config/niri"
-  mkdir -p "$NIRI_CONFIG_DIR"
-  MONITOR_CONFIG_FILE="$NIRI_CONFIG_DIR/config.kdl"
-
-  # Criar arquivo temporário com os blocos output
-  MONITOR_BLOCKS=""
-  MAX_HEIGHT=0
-  LAST_MONITOR_W=""
-
-  while IFS= read -r line; do
-    local_output=$(echo "$line" | awk '{print $1}')
-    local_res=$(echo "$line" | awk '{print $2}')
-    local_refresh=$(echo "$line" | awk '{print $3}')
-    local_width=$(echo "$local_res" | cut -d'x' -f1)
-    local_height=$(echo "$local_res" | cut -d'x' -f2)
-    local_scale=$(get_scale_for_height "$local_height")
-
-    # Rastrear maior resolução para xsettingsd
-    [ "$local_height" -gt "$MAX_HEIGHT" ] && MAX_HEIGHT=$local_height
-
-    # Posição automática: empilhar monitores lado a lado
-    local_pos_x=0
-    if [ -n "$LAST_MONITOR_W" ]; then
-      local_pos_x=$LAST_MONITOR_W
-    fi
-    LAST_MONITOR_W=$((local_pos_x + local_width))
-
-    MONITOR_BLOCKS="${MONITOR_BLOCKS}output \"${local_output}\" {
-    mode \"${local_width}x${local_height}@${local_refresh}\"
-
-    scale ${local_scale}
-
-    transform \"normal\"
-    position x=${local_pos_x} y=0
-}
-
-"
-    info "  ${local_output}: ${local_width}x${local_height} escala ${local_scale}"
-  done <<< "$MONITORS_FOUND"
-
-  # Remover blocos output existentes do config.kdl (se existir)
-  if [ -f "$MONITOR_CONFIG_FILE" ]; then
-    # Usar sed para remover blocos output existentes
-    # Remove linhas desde "output \"..." até a próxima "}"
-    sed -i '/^output "/,/^}/d' "$MONITOR_CONFIG_FILE"
-    # Limpar linhas vazias extras
-    sed -i '/^$/N;/^\n$/d' "$MONITOR_CONFIG_FILE"
-  fi
-
-  # Adicionar blocos output detectados
-  if [ -n "$MONITOR_BLOCKS" ]; then
-    echo "" >> "$MONITOR_CONFIG_FILE"
-    echo "$MONITOR_BLOCKS" >> "$MONITOR_CONFIG_FILE"
-    ok "Blocos output gerados no config.kdl"
-  fi
-
-  # Criar ~/.xsettingsd com DPI correto
-  XSETTINGSD_SCALE=$(get_scale_for_height "$MAX_HEIGHT")
-  XSETTINGSD_DPI=$(python3 -c "print(int(96 * $XSETTINGSD_SCALE))" 2>/dev/null || echo "96")
-
-  cat > "$HOME/.xsettingsd" << XSETEOF
-# Auto-gerado pelo install-niri.sh
-# Escala detectada: ${XSETTINGSD_SCALE}x (monitor: ${MAX_HEIGHT}p)
-Xft/DPI ${XSETTINGSD_DPI}
-Xft/Antialias 1
-Xft/Hinting 1
-Xft/HintStyle hintslight
-Xft/rgba rgb
-XSETEOF
-
-  ok "~/.xsettingsd criado com DPI ${XSETTINGSD_DPI} (escala ${XSETTINGSD_SCALE}x)"
-  info "Isso garante que apps GTK (como Steam) usem a escala correta"
-else
-  warn "Nenhum monitor detectado."
-  info "Os blocos output do config.kdl ficarão como fallback."
-  info "Para configurar manualmente, use: bash ~/.config/scripts/monitor-config.sh"
-fi
-quote
-
-# ──────────────────────────────────────────────
 # 6c. Configuração NVIDIA para Wayland
 # ──────────────────────────────────────────────
 if lspci | grep -qi nvidia; then
@@ -1028,6 +791,201 @@ xdg-user-dirs-update 2>&1 || true
 xdg-user-dirs-gtk-update 2>&1 || true
 ok "Diretórios criados"
 
+
+# ──────────────────────────────────────────────
+# 13. Auto-detecção de monitor + escala (FINAL)
+# ──────────────────────────────────────────────
+step "🖥️ Detectando monitores e configurando escala..."
+
+# Função: detectar monitores via kernel DRM
+detect_monitors() {
+  local monitors=()
+
+  for card in /sys/class/drm/card*-*/; do
+    [ -d "$card" ] || continue
+    local status_file="${card}status"
+    [ -f "$status_file" ] || continue
+    local status
+    status=$(cat "$status_file" 2>/dev/null)
+    [ "$status" = "connected" ] || continue
+    local output_name
+    output_name=$(basename "$card" | sed 's/card[0-9]*-//')
+    monitors+=("$output_name")
+  done
+
+  if [ ${#monitors[@]} -eq 0 ]; then
+    echo ""
+    return 1
+  fi
+
+  # Para cada monitor detectado, pegar resolução e refresh rate
+  for output in "${monitors[@]}"; do
+    local width="" height="" refresh=""
+
+    local card_dir=""
+    for card in /sys/class/drm/card*-*/; do
+      [ -d "$card" ] || continue
+      local out_name
+      out_name=$(basename "$card" | sed 's/card[0-9]*-//')
+      if [ "$out_name" = "$output" ]; then
+        card_dir="$card"
+        break
+      fi
+    done
+
+    if [ -n "$card_dir" ]; then
+      # Ler EDID para resolução nativa
+      if [ -f "${card_dir}edid" ]; then
+        local edid_hex
+        edid_hex=$(xxd -p "${card_dir}edid" 2>/dev/null)
+        local edid_bin
+        edid_bin=$(echo "$edid_hex" | xxd -r -p 2>/dev/null)
+
+        # Procurar por descriptor com resolução
+        local i
+        for i in 54 72 90 108 126; do
+          local tag
+          tag=$(echo "$edid_bin" | dd bs=1 count=1 skip=$i 2>/dev/null | xxd -p)
+          if [ "$tag" = "000000000000" ]; then
+            local w h
+            w=$(printf '%d' "0x$(echo "$edid_bin" | dd bs=1 count=1 skip=$((i+2)) 2>/dev/null | xxd -p)")
+            h=$(printf '%d' "0x$(echo "$edid_bin" | dd bs=1 count=1 skip=$((i+1)) 2>/dev/null | xxd -p)")
+            if [ "$w" -gt 0 ] && [ "$h" -gt 0 ]; then
+              width=$w
+              height=$h
+              break
+            fi
+          fi
+        done
+      fi
+
+      # Fallback: ler preferred mode do kernel
+      if [ -z "$width" ] && [ -f "${card_dir}modes" ]; then
+        local first_mode
+        first_mode=$(head -1 "${card_dir}modes" 2>/dev/null)
+        if [ -n "$first_mode" ]; then
+          width=$(echo "$first_mode" | cut -d'x' -f1)
+          height=$(echo "$first_mode" | cut -d'x' -f2 | cut -d' ' -f1)
+        fi
+      fi
+
+      # Ler refresh rate (maior disponível)
+      if [ -z "$refresh" ] && [ -f "${card_dir}modes" ]; then
+        local best_refresh="0"
+        while IFS= read -r mode_line; do
+          local mode_refresh
+          mode_refresh=$(echo "$mode_line" | grep -oP '\d+\.\d+' | head -1)
+          if [ -n "$mode_refresh" ]; then
+            if command -v bc &>/dev/null; then
+              if [ "$(echo "$mode_refresh > $best_refresh" | bc 2>/dev/null)" = "1" ]; then
+                best_refresh="$mode_refresh"
+              fi
+            else
+              best_refresh="$mode_refresh"
+            fi
+          fi
+        done < "${card_dir}modes"
+        [ "$best_refresh" != "0" ] && refresh="$best_refresh"
+      fi
+    fi
+
+    [ -n "$width" ] && [ -n "$height" ] && echo "$output ${width}x${height} ${refresh:-60.000}"
+  done
+}
+
+# Função: calcular escala baseada na resolução vertical
+get_scale_for_height() {
+  local height="$1"
+  if [ "$height" -ge 2160 ]; then
+    echo "2.0"
+  elif [ "$height" -ge 1440 ]; then
+    echo "1.5"
+  else
+    echo "1.0"
+  fi
+}
+
+# Detectar monitores
+MONITORS_FOUND=$(detect_monitors) || true
+
+if [ -n "$MONITORS_FOUND" ]; then
+  info "Monitores detectados:"
+  echo "$MONITORS_FOUND" | while read -r line; do
+    info "  $line"
+  done
+  echo ""
+
+  # Gerar blocos output para config.kdl
+  NIRI_CONFIG_DIR="$HOME/.config/niri"
+  mkdir -p "$NIRI_CONFIG_DIR"
+  MONITOR_CONFIG_FILE="$NIRI_CONFIG_DIR/config.kdl"
+
+  MONITOR_BLOCKS=""
+  MAX_HEIGHT=0
+  LAST_MONITOR_W=""
+
+  while IFS= read -r line; do
+    local_output=$(echo "$line" | awk '{print $1}')
+    local_res=$(echo "$line" | awk '{print $2}')
+    local_refresh=$(echo "$line" | awk '{print $3}')
+    local_width=$(echo "$local_res" | cut -d'x' -f1)
+    local_height=$(echo "$local_res" | cut -d'x' -f2)
+    local_scale=$(get_scale_for_height "$local_height")
+
+    [ "$local_height" -gt "$MAX_HEIGHT" ] && MAX_HEIGHT=$local_height
+
+    local_pos_x=0
+    if [ -n "$LAST_MONITOR_W" ]; then
+      local_pos_x=$LAST_MONITOR_W
+    fi
+    LAST_MONITOR_W=$((local_pos_x + local_width))
+
+    MONITOR_BLOCKS="${MONITOR_BLOCKS}output \"${local_output}\" {
+    mode \"${local_width}x${local_height}@${local_refresh}\"
+
+    scale ${local_scale}
+
+    transform \"normal\"
+    position x=${local_pos_x} y=0
+}
+
+"
+    info "  ${local_output}: ${local_width}x${local_height} escala ${local_scale}"
+  done <<< "$MONITORS_FOUND"
+
+  # Remover blocos output existentes do config.kdl
+  if [ -f "$MONITOR_CONFIG_FILE" ]; then
+    sed -i '/^output "/,/^}/d' "$MONITOR_CONFIG_FILE"
+    sed -i '/^$/N;/^\n$/d' "$MONITOR_CONFIG_FILE"
+  fi
+
+  # Adicionar blocos output detectados
+  if [ -n "$MONITOR_BLOCKS" ]; then
+    echo "" >> "$MONITOR_CONFIG_FILE"
+    echo "$MONITOR_BLOCKS" >> "$MONITOR_CONFIG_FILE"
+    ok "Blocos output gerados no config.kdl"
+  fi
+
+  # Criar ~/.xsettingsd com DPI correto
+  XSETTINGSD_SCALE=$(get_scale_for_height "$MAX_HEIGHT")
+  XSETTINGSD_DPI=$(python3 -c "print(int(96 * $XSETTINGSD_SCALE))" 2>/dev/null || echo "96")
+
+  cat > "$HOME/.xsettingsd" << XSETEOF
+# Auto-gerado pelo install-niri.sh
+# Escala detectada: ${XSETTINGSD_SCALE}x (monitor: ${MAX_HEIGHT}p)
+Xft/DPI ${XSETTINGSD_DPI}
+Xft/Antialias 1
+Xft/Hinting 1
+Xft/HintStyle hintslight
+Xft/rgba rgb
+XSETEOF
+
+  ok "~/.xsettingsd criado com DPI ${XSETTINGSD_DPI} (escala ${XSETTINGSD_SCALE}x)"
+else
+  warn "Nenhum monitor detectado."
+  info "Para configurar manualmente, use: bash ~/.config/scripts/monitor-config.sh"
+fi
+quote
 
 # ──────────────────────────────────────────────
 # 14. Final — escolha do usuário
