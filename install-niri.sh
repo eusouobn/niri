@@ -528,6 +528,13 @@ options nvidia_drm modeset=1 fbdev=1
 EOF
   ok "Modprobe: nvidia.conf configurado"
 
+  # Instalar headers do kernel para compilar módulos NVIDIA
+  KERNEL_PKG=$(pacman -Q linux 2>/dev/null | awk '{print $1}')
+  if [ -n "$KERNEL_PKG" ]; then
+    sudo pacman -S --needed --noconfirm "${KERNEL_PKG}-headers"
+    ok "Headers do kernel instalados"
+  fi
+
   # Hooks do initramfs
   sudo tee /etc/mkinitcpio.conf.d/nvidia.conf > /dev/null <<'EOF'
 MODULES=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)
