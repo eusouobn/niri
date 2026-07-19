@@ -434,6 +434,12 @@ sed -i 's/#ParallelDownloads/ParallelDownloads/' /mnt/etc/pacman.conf
 # Multilib
 sed -i '/\[multilib\]/,/Include/s/^#//' /mnt/etc/pacman.conf
 
+# Pacotes essenciais
+arch-chroot /mnt pacman -Sy --noconfirm \
+  git nano wget sudo pacman-contrib reflector \
+  networkmanager dhcpcd iwd usbutils base-devel \
+  noto-fonts noto-fonts-emoji
+
 # User
 arch-chroot /mnt useradd -m -G wheel "$USERNAME"
 
@@ -443,12 +449,6 @@ arch-chroot /mnt usermod -G wheel,autologin "$USERNAME"
 
 # Sudo
 sed -i 's/^# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/' /mnt/etc/sudoers
-
-# Pacotes essenciais
-arch-chroot /mnt pacman -Sy --noconfirm \
-  git nano wget sudo pacman-contrib reflector \
-  networkmanager dhcpcd iwd usbutils base-devel \
-  noto-fonts noto-fonts-emoji
 
 # ── Driver de vídeo ────────────────────────────────────────
 info "Instalando driver de vídeo..."
