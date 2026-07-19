@@ -425,6 +425,7 @@ if [ -n "$MONITORS_FOUND" ]; then
   # Criar arquivo temporário com os blocos output
   MONITOR_BLOCKS=""
   MAX_HEIGHT=0
+  LAST_MONITOR_W=""
 
   while IFS= read -r line; do
     local_output=$(echo "$line" | awk '{print $1}')
