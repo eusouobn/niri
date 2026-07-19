@@ -971,6 +971,27 @@ command -v nwg-look &>/dev/null && nwg-look -a 2>&1 || true
 write_gtk_dark "$HOME/.config/gtk-3.0/settings.ini"
 write_gtk_dark "$HOME/.config/gtk-4.0/settings.ini"
 
+# KDE/Dolphin: forçar Papirus-Dark via kdeglobals
+mkdir -p "$HOME/.config"
+if [ -f "$HOME/.config/kdeglobals" ]; then
+  # Substituir ou adicionar [KDE] IconTheme
+  if grep -q "^IconTheme=" "$HOME/.config/kdeglobals"; then
+    sed -i 's/^IconTheme=.*/IconTheme=Papirus-Dark/' "$HOME/.config/kdeglobals"
+  else
+    if grep -q "^\[KDE\]" "$HOME/.config/kdeglobals"; then
+      sed -i '/^\[KDE\]/a IconTheme=Papirus-Dark' "$HOME/.config/kdeglobals"
+    else
+      echo -e "\n[KDE]\nIconTheme=Papirus-Dark" >> "$HOME/.config/kdeglobals"
+    fi
+  fi
+else
+  cat > "$HOME/.config/kdeglobals" << 'KDEEOF'
+[KDE]
+IconTheme=Papirus-Dark
+KDEEOF
+fi
+ok "Dolphin/KDE: Papirus-Dark definido via kdeglobals"
+
 # Garantir que Papirus-Dark está instalado (pacote oficial)
 if [ ! -d "$HOME/.local/share/icons/Papirus-Dark" ]; then
   if pacman -Qi papirus-icon-theme &>/dev/null; then
