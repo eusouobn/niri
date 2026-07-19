@@ -286,6 +286,25 @@ ok "Nerd Fonts instaladas — seu terminal nunca mais será o mesmo"
 quote
 
 # ──────────────────────────────────────────────
+# 6a. Clonar dotfiles do GitHub (ANTES de detectar monitores)
+# ──────────────────────────────────────────────
+if [ -n "$PENDRIVE" ] && [ -f "$PENDRIVE/niri.tar.gz" ]; then
+  step "📂 Restaurando configurações do pendrive..."
+  tar -xzf "$PENDRIVE/niri.tar.gz" -C "$HOME/.config"
+  ok "Configurações restauradas do pendrive"
+  quote
+elif [ ! -d "$HOME/.config/niri" ]; then
+  step "📥 Clonando dotfiles do GitHub..."
+  info "Baixando de https://github.com/eusouobn/niri.git"
+  echo ""
+  git clone https://github.com/eusouobn/niri.git /tmp/niri-dotfiles
+  cp -r /tmp/niri-dotfiles/.config/* "$HOME/.config/"
+  rm -rf /tmp/niri-dotfiles
+  ok "Dotfiles clonados do GitHub!"
+  quote
+fi
+
+# ──────────────────────────────────────────────
 # 6b. Auto-detecção de monitor + escala
 # ──────────────────────────────────────────────
 step "🖥️ Detectando monitores e configurando escala..."
@@ -593,40 +612,6 @@ if [ -n "$PENDRIVE" ] && [ -f "$PENDRIVE/sddm.conf.tar.gz" ]; then
   info "Configurações do SDDM restauradas do pendrive"
 fi
 quote
-
-# ──────────────────────────────────────────────
-# 8. Restaurar configs
-# ──────────────────────────────────────────────
-step "📂 Restaurando suas configurações..."
-
-if [ -n "$PENDRIVE" ]; then
-  info "Extraindo configs do pendrive..."
-  for archive in niri.tar.gz noctalia.tar.gz; do
-    if [ -f "$PENDRIVE/$archive" ]; then
-      tar -xzf "$PENDRIVE/$archive" -C "$HOME/.config"
-      ok "${archive%.tar.gz} restaurado"
-    fi
-  done
-  for cfg in fastfetch kitty fish gtk-3.0 gtk-4.0 qt5ct qt6ct fuzzel; do
-    if [ -f "$PENDRIVE/$cfg.tar.gz" ]; then
-      tar -xzf "$PENDRIVE/$cfg.tar.gz" -C "$HOME/.config"
-      info "$cfg restaurado"
-    fi
-  done
-  quote
-fi
-
-# Fallback: clonar dotfiles do git automaticamente
-if [ ! -d "$HOME/.config/niri" ]; then
-  warn "Nenhuma config encontrada no pendrive. Clonando do GitHub..."
-  info "Baixando dotfiles de https://github.com/eusouobn/niri.git"
-  echo ""
-  git clone https://github.com/eusouobn/niri.git /tmp/niri-dotfiles
-  cp -r /tmp/niri-dotfiles/.config/* "$HOME/.config/"
-  rm -rf /tmp/niri-dotfiles
-  ok "Configurações restauradas do GitHub!"
-  quote
-fi
 
 # ──────────────────────────────────────────────
 # 8b. Corrigir caminhos absolutos para o usuário atual
