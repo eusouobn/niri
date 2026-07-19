@@ -29,6 +29,35 @@ if ! command -v pacstrap &>/dev/null; then
   exit 1
 fi
 
+# ── Configurar mirrors ────────────────────────────────────
+info "Configurando mirrors..."
+
+# Copiar mirrorlist do ISO se existir
+if [ -f /etc/pacman.d/mirrorlist ]; then
+  cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
+fi
+
+# Usar reflector se disponível, senão usar mirrorlist padrão
+if command -v reflector &>/dev/null; then
+  reflector --country Brazil --protocol https --sort rate --latest 5 --save /etc/pacman.d/mirrorlist
+  ok "Mirrors configurados via reflector"
+else
+  # Fallback: usar mirrors brasileiros
+  cat > /etc/pacman.d/mirrorlist <<'EOF'
+## Brasil
+Server = https://archlinux-br.org/repos/$repo/os/$arch
+Server = https://mirror.ufam.edu.br/archlinux/$repo/os/$arch
+Server = https://arch.mirrorcamp.com.br/repos/$repo/os/$arch
+
+## Global
+Server = https://geo.mirror.pkgbuild.com/repos/$repo/os/$arch
+Server = https://mirror.rackspace.com/archlinux/repos/$repo/os/$arch
+EOF
+  ok "Mirrors configurados (fallback)"
+fi
+
+pacman -Syy
+
 # ══════════════════════════════════════════════════════════
 # 1. HOSTNAME
 # ══════════════════════════════════════════════════════════
@@ -399,6 +428,7 @@ echo "::1 localhost.localdomain localhost" >> /mnt/etc/hosts
 echo "127.0.1.1 $HOSTNAME.localdomain $HOSTNAME" >> /mnt/etc/hosts
 
 # Mirrors + parallel downloads
+cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
 sed -i 's/#ParallelDownloads/ParallelDownloads/' /mnt/etc/pacman.conf
 
 # Multilib
