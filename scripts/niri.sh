@@ -312,6 +312,10 @@ if [ -f /tmp/config.kdl.backup ]; then
 fi
 
 ok "Dotfiles baixados do GitHub!"
+
+# Tornar scripts executáveis
+chmod +x "$HOME/.config/scripts/"*.sh 2>/dev/null || true
+ok "Scripts tornados executáveis"
 quote
 
 # ──────────────────────────────────────────────

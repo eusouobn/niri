@@ -21,6 +21,8 @@ environment {
     BROWSER "firefox"
     // BROWSER "chromium"
     // BROWSER "brave-browser"
+    // Adiciona scripts ao PATH para executar direto no terminal
+    PATH "$HOME/.local/bin:$HOME/.config/scripts:$PATH"
 }
 
 input {
