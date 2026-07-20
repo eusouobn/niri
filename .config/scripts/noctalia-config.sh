@@ -662,45 +662,53 @@ menu_corner() {
     maybe_reload
 }
 
-menu_anim() {
+menu_anim_toggle() {
     header
     echo -e "${W}${BD}  ANIMACOES:${D}"
-    pick "Velocidade" "1.0  (padrao)" "0.5  (lento)" "0.75 (moderado)" "1.5  (rapido)" "2.0  (extra rapido)" "Desligar animacoes"
-    if [[ "$_CHOICE" == "Desligar animacoes" ]]; then
-        ensure_dir
-        do_backup
-        json_set "$CONFIG_FILE" "general.animationDisabled" "true"
-        info "Animacoes desligadas!"
+    local current=$(json_get "$CONFIG_FILE" "general.animationDisabled" 2>/dev/null)
+    if [[ "$current" == "True" || "$current" == "true" ]]; then
+        echo -e "  Status atual: ${R}desligadas${D}"
+        echo ""
+        if confirm "Ativar animacoes?"; then
+            ensure_dir; do_backup
+            json_set "$CONFIG_FILE" "general.animationDisabled" "false"
+            ok "Animacoes ativadas!"
+            maybe_reload
+        fi
     else
-        local spd=$(echo "$_CHOICE" | grep -oP '^[0-9.]+')
-        info "Velocidade: $spd"
-        ensure_dir
-        do_backup
-        json_set "$CONFIG_FILE" "general.animationDisabled" "false"
-        json_set "$CONFIG_FILE" "general.animationSpeed" "$spd"
-        info "Animacao: $spd"
+        echo -e "  Status atual: ${G}ativadas${D}"
+        echo ""
+        if confirm "Desativar animacoes?"; then
+            ensure_dir; do_backup
+            json_set "$CONFIG_FILE" "general.animationDisabled" "true"
+            ok "Animacoes desativadas!"
+            maybe_reload
+        fi
     fi
-    maybe_reload
 }
 
-menu_transparency() {
+menu_transparency_toggle() {
     header
-    echo -e "${W}${BD}  TRANSPARENCIA DOS PAINEIS:${D}"
-    pick "Modo" "solid  (opaco)" "soft   (leve)" "glass  (vidro)"
-    local tr=$(echo "$_CHOICE" | awk '{print $1}')
+    echo -e "${W}${BD}  TRANSPARENCIA:${D}"
+    local current=$(json_get "$CONFIG_FILE" "bar.backgroundOpacity" 2>/dev/null)
+    echo -e "  Opacidade atual: ${C}${current}${D}"
+    echo ""
+    echo -e "  ${G}1${D})  Opaco (1.0)"
+    echo -e "  ${G}2${D})  Leve (0.85)"
+    echo -e "  ${G}3${D})  Vidro (0.6)"
+    echo ""
+    echo -en "  ${C}>${D} Selecione: "
+    read -r _tchoice
     local opacity
-    case "$tr" in
-        solid) opacity="1.0" ;;
-        soft)  opacity="0.85" ;;
-        glass) opacity="0.6" ;;
-        *)     opacity="1.0" ;;
+    case "${_tchoice:-1}" in
+        2) opacity="0.85" ;;
+        3) opacity="0.6" ;;
+        *) opacity="1.0" ;;
     esac
-    info "Transparencia: $tr ($opacity)"
-    ensure_dir
-    do_backup
+    ensure_dir; do_backup
     json_set "$CONFIG_FILE" "bar.backgroundOpacity" "$opacity"
     json_set "$CONFIG_FILE" "ui.panelBackgroundOpacity" "$opacity"
-    info "Transparencia atualizada!"
+    ok "Opacidade: $opacity"
     maybe_reload
 }
 
@@ -977,19 +985,14 @@ main_menu() {
         echo ""
         echo -e "  ${G}1${D})  Configuracao completa (passo a passo)"
         echo ""
-        echo -e "  ${M}--- Config Rapida (Noctalia) ---${D}"
-        echo -e "  ${G}2${D})  Mudar fonte"
-        echo -e "  ${G}3${D})  Mudar color scheme"
-        echo -e "  ${G}4${D})  Mudar modo (dark/light/auto)"
-        echo -e "  ${G}5${D})  Mudar diretorio de wallpaper"
-        echo -e "  ${G}6${D})  Mudar raio dos cantos"
-        echo -e "  ${G}7${D})  Mudar velocidade de animacao"
-        echo -e "  ${G}8${D})  Mudar transparencia"
+        echo -e "  ${M}--- Appearance ---${D}"
+        echo -e "  ${G}2${D})  Appearance completo (tema+ícones+fonte)"
+        echo -e "  ${G}3${D})  Mudar icon theme (só ícones)"
+        echo -e "  ${G}4${D})  Mudar cursor theme"
         echo ""
-        echo -e "  ${M}--- GTK / Appearance ---${D}"
-        echo -e "  ${G}9${D})  Appearance completo (tema+ícones+fonte)"
-        echo -e "  ${G}10${D}) Mudar icon theme (só ícones)"
-        echo -e "  ${G}11${D}) Mudar cursor theme"
+        echo -e "  ${M}--- Noctalia ---${D}"
+        echo -e "  ${G}5${D})  Ativar/desativar animacoes"
+        echo -e "  ${G}6${D})  Ativar/desativar transparencia"
         echo ""
         echo -e "  ${M}--- Outros ---${D}"
         echo -e "  ${G}s${D})  Ver status atual"
@@ -1002,16 +1005,11 @@ main_menu() {
 
         case "$opt" in
             1)  menu_full_setup ;;
-            2)  menu_font ;;
-            3)  menu_theme ;;
-            4)  menu_theme_mode ;;
-            5)  menu_wallpaper ;;
-            6)  menu_corner ;;
-            7)  menu_anim ;;
-            8)  menu_transparency ;;
-            9)  menu_appearance ;;
-            10) menu_icon_theme ;;
-            11) menu_cursor ;;
+            2)  menu_appearance ;;
+            3)  menu_icon_theme ;;
+            4)  menu_cursor ;;
+            5)  menu_anim_toggle ;;
+            6)  menu_transparency_toggle ;;
             s|S) menu_status ;;
             e|E) menu_export ;;
             r|R) reload_shell; press_enter ;;
