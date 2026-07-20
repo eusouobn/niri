@@ -172,7 +172,7 @@ fi
 OFFICIAL_PACKAGES=(
   dolphin dolphin-plugins kde-cli-tools kio unrar unrar-free unzip
   pacman-contrib kate cmake cmake-extras fish bc fastfetch inxi wget
-  code gnome-calculator papers loupe btop gnome-disk-utility
+  code gnome-calculator papers gwenview btop gnome-disk-utility
   gnome-text-editor ark kitty firefox mpv audacious audacious-plugins
   xdg-desktop-portal xdg-desktop-portal-gtk xdg-desktop-portal-wlr
   xdg-desktop-portal-gnome bash-completion
