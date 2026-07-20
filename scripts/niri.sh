@@ -877,11 +877,36 @@ quote
 # ──────────────────────────────────────────────
 # 11. Dolphin padrão (xdg-mime)
 # ──────────────────────────────────────────────
-step "🐬 Definindo Dolphin como gerenciador padrão..."
+step "🐬 Definindo apps padrão..."
 info "Associando pastas ao Dolphin..."
 xdg-mime default org.kde.dolphin.desktop inode/directory
 xdg-mime default org.kde.dolphin.desktop x-scheme-handler/trash
-ok "Dolphin é o padrão — abrir pasta = Dolphin"
+
+# mpv — vídeos
+xdg-mime default mpv.desktop video/mp4
+xdg-mime default mpv.desktop video/x-matroska
+xdg-mime default mpv.desktop video/webm
+xdg-mime default mpv.desktop video/x-msvideo
+xdg-mime default mpv.desktop video/quicktime
+xdg-mime default mpv.desktop video/x-flv
+
+# gwenview — imagens
+xdg-mime default org.kde.gwenview.desktop image/png
+xdg-mime default org.kde.gwenview.desktop image/jpeg
+xdg-mime default org.kde.gwenview.desktop image/gif
+xdg-mime default org.kde.gwenview.desktop image/webp
+xdg-mime default org.kde.gwenview.desktop image/bmp
+xdg-mime default org.kde.gwenview.desktop image/svg+xml
+
+# audacious — áudio
+xdg-mime default audacious.desktop audio/mpeg
+xdg-mime default audacious.desktop audio/x-flac
+xdg-mime default audacious.desktop audio/ogg
+xdg-mime default audacious.desktop audio/x-wav
+xdg-mime default audacious.desktop audio/aac
+xdg-mime default audacious.desktop audio/mp4
+
+ok "Apps padrão: Dolphin, mpv, gwenview, audacious"
 quote
 
 # ──────────────────────────────────────────────
