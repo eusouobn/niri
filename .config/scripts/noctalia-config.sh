@@ -206,9 +206,9 @@ ENV
     info "Icon global: $icon_theme (GTK3+GTK4+Qt5+Qt6)"
 }
 
-# Aplicar appearance completo (tema + ícones + fonte) em GTK3+GTK4+Qt5+Qt6+Dolphin+env
+# Aplicar appearance completo (tema + ícones + fonte) em GTK3+GTK4+Qt5+Qt6+Dolphin+env+Firefox
 apply_gtk_appearance() {
-    local theme="$1" icon_theme="$2" font="$3" font_size="${4:-12}"
+    local theme="$1" icon_theme="$2" font="$3" font_size="${4:-12}" qt_theme="${5:-}"
 
     # GTK3
     mkdir -p "$(dirname "$GTK_SETTINGS")"
@@ -243,22 +243,32 @@ EOF
     # Qt5
     local qt5_conf="${HOME}/.config/qt5ct/qt5ct.conf"
     mkdir -p "$(dirname "$qt5_conf")"
-    if [[ -f "$qt5_conf" ]] && grep -q "icon_theme" "$qt5_conf" 2>/dev/null; then
-        sed -i "s/^icon_theme\s*=.*/icon_theme = ${icon_theme}/" "$qt5_conf"
+    if [[ -f "$qt5_conf" ]]; then
+        [[ -n "$qt_theme" ]] && sed -i "s/^style\s*=.*/style = ${qt_theme}/" "$qt5_conf" 2>/dev/null
+        sed -i "s/^icon_theme\s*=.*/icon_theme = ${icon_theme}/" "$qt5_conf" 2>/dev/null
     else
-        echo "icon_theme = ${icon_theme}" >> "$qt5_conf"
+        {
+            echo "[Appearance]"
+            [[ -n "$qt_theme" ]] && echo "style = ${qt_theme}"
+            echo "icon_theme = ${icon_theme}"
+        } > "$qt5_conf"
     fi
-    ok "Qt5 ícones: ${icon_theme}"
+    ok "Qt5: tema=${qt_theme:-padrão} ícones=${icon_theme}"
 
     # Qt6
     local qt6_conf="${HOME}/.config/qt6ct/qt6ct.conf"
     mkdir -p "$(dirname "$qt6_conf")"
-    if [[ -f "$qt6_conf" ]] && grep -q "icon_theme" "$qt6_conf" 2>/dev/null; then
-        sed -i "s/^icon_theme\s*=.*/icon_theme = ${icon_theme}/" "$qt6_conf"
+    if [[ -f "$qt6_conf" ]]; then
+        [[ -n "$qt_theme" ]] && sed -i "s/^style\s*=.*/style = ${qt_theme}/" "$qt6_conf" 2>/dev/null
+        sed -i "s/^icon_theme\s*=.*/icon_theme = ${icon_theme}/" "$qt6_conf" 2>/dev/null
     else
-        echo "icon_theme = ${icon_theme}" >> "$qt6_conf"
+        {
+            echo "[Appearance]"
+            [[ -n "$qt_theme" ]] && echo "style = ${qt_theme}"
+            echo "icon_theme = ${icon_theme}"
+        } > "$qt6_conf"
     fi
-    ok "Qt6 ícones: ${icon_theme}"
+    ok "Qt6: tema=${qt_theme:-padrão} ícones=${icon_theme}"
 
     # Dolphin/KDE (kdeglobals)
     mkdir -p "$HOME/.config"
@@ -293,6 +303,30 @@ EOF
         echo "GTK_THEME=${theme}" > "$env_d"
     fi
     ok "environment.d: GTK_THEME=${theme}"
+
+    # Firefox — force dark theme via user.js
+    local ff_dir="${HOME}/.mozilla/firefox"
+    if [[ -d "$ff_dir" ]]; then
+        local ff_profile
+        ff_profile=$(grep -l "Default" "$ff_dir/profiles.ini" 2>/dev/null | head -1)
+        if [[ -n "$ff_profile" ]]; then
+            local ff_userjs="${ff_profile%/*}/user.js"
+        else
+            ff_userjs=$(find "$ff_dir" -maxdepth 2 -name "prefs.js" 2>/dev/null | head -1)
+            [[ -n "$ff_userjs" ]] && ff_userjs="${ff_userjs%/*}/user.js"
+        fi
+        if [[ -n "$ff_userjs" && -d "$(dirname "$ff_userjs")" ]]; then
+            # Remover config anterior se existir
+            [[ -f "$ff_userjs" ]] && sed -i '/user_pref("ui.systemUsesDarkTheme"/d' "$ff_userjs"
+            [[ -f "$ff_userjs" ]] && sed -i '/user_pref("widget.content gtk-theme-override"/d' "$ff_userjs"
+            cat >> "$ff_userjs" << FFEOF
+// Forçado por noctalia-config.sh
+user_pref("ui.systemUsesDarkTheme", 1);
+user_pref("widget.content gtk-theme-override", "${theme}");
+FFEOF
+            ok "Firefox: dark mode + tema GTK"
+        fi
+    fi
 }
 
 apply_env_vars() {
@@ -312,11 +346,12 @@ ENV
 #  LISTAS
 # ══════════════════════════════════════════════════════════════════════════════
 FONTS_LIST=(
+    "Ubuntu" "Ubuntu Bold" "Ubuntu Sans" "Ubuntu Sans Nerd Font"
+    "Ubuntu Mono" "Ubuntu Mono Nerd Font"
     "sans-serif" "Inter" "JetBrains Mono"
     "JetBrains Mono Nerd Font" "Fira Code" "FiraCode Nerd Font"
     "Cascadia Code" "Cascadia Code Nerd Font"
     "0xProto Nerd Font" "Fantasque Sans Mono Nerd Font"
-    "Ubuntu Sans" "Ubuntu Sans Nerd Font"
     "Space Mono Nerd Font" "Iosevka Nerd Font"
     "MesloLGS NF" "Maple Mono NF"
     "Source Code Pro" "Hack Nerd Font"
@@ -335,6 +370,12 @@ GTK_THEMES_LIST=(
     "Colloid-Dark" "Colloid-Light"
     "Catppuccin-Mocha-Standard-Dark" "Catppuccin-Mocha-Standard-Lite"
     "Dracula" "Nordic-Darker" "Tokyonight-Dark-BL"
+)
+
+QT_THEMES_LIST=(
+    "adwaita-dark" "adwaita-light"
+    "kvantum-dark" "kvantum"
+    "breeze-dark" "breeze"
 )
 
 WEIGHT_LIST=(
@@ -684,6 +725,12 @@ menu_appearance() {
     info "Tema: $theme"
 
     echo ""
+    echo -e "${W}${BD}  TEMA QT (Dolphin, qBittorrent, etc):${D}"
+    pick "Tema Qt" "${QT_THEMES_LIST[@]}"
+    local qt_theme="$_CHOICE"
+    info "Tema Qt: $qt_theme"
+
+    echo ""
     echo -e "${W}${BD}  ICON THEME:${D}"
     pick "Ícones" "${ICONS_LIST[@]}"
     local icons="$_CHOICE"
@@ -705,6 +752,7 @@ menu_appearance() {
     echo -e "${W}${BD}  RESUMO:${D}"
     echo ""
     echo -e "  Tema GTK:   ${G}${theme}${D}"
+    echo -e "  Tema Qt:    ${G}${qt_theme}${D}"
     echo -e "  Ícones:     ${G}${icons}${D}"
     echo -e "  Fonte:      ${G}${font}${D}"
     echo -e "  Tamanho:    ${G}${size}${D}"
@@ -713,7 +761,7 @@ menu_appearance() {
     if confirm "Aplicar appearance?"; then
         ensure_dir
         do_backup
-        apply_gtk_appearance "$theme" "$icons" "$font" "$size"
+        apply_gtk_appearance "$theme" "$icons" "$font" "$size" "$qt_theme"
         echo ""
         info "Appearance aplicado!"
         maybe_reload
@@ -1045,7 +1093,8 @@ cli_mode() {
             local icons="${3:-Papirus-Dark}"
             local font="${4:-Ubuntu Bold}"
             local size="${5:-12}"
-            apply_gtk_appearance "$theme" "$icons" "$font" "$size"
+            local qt_theme="${6:-adwaita-dark}"
+            apply_gtk_appearance "$theme" "$icons" "$font" "$size" "$qt_theme"
             ;;
         --cursor)
             apply_env_vars "" "${2:-Bibata-Modern-Ice}"
@@ -1079,8 +1128,8 @@ Uso: noctalia-config.sh [OPCAO] [VALOR]
   --anim-speed <vel|off>       Velocidade (0.5-2.0) ou "off" pra desligar
   --corner-radius <raio>       Raio dos cantos (0.0-2.0)
   --icon-theme <nome>          Definir icon global (GTK+Qt)
-  --appearance <tema> <ícones> <fonte> <tamanho>
-                               Definir appearance completo (tema+ícones+fonte)
+  --appearance <tema> <ícones> <fonte> <tamanho> <tema-qt>
+                               Definir appearance completo (GTK+Qt+ícones+fonte)
   --cursor <nome>              Definir cursor
   --status                     Ver config
   --help                       Ajuda
