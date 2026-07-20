@@ -206,9 +206,10 @@ ENV
     info "Icon global: $icon_theme (GTK3+GTK4+Qt5+Qt6)"
 }
 
-# Aplicar appearance completo (tema + ícones + fonte) em GTK3+GTK4+Qt5+Qt6+Dolphin+env+Firefox
+# Aplicar appearance completo em GTK3+GTK4+Qt5+Qt6+Dolphin+env+Firefox+Kitty
 apply_gtk_appearance() {
-    local theme="$1" icon_theme="$2" font="$3" font_size="${4:-12}" qt_theme="${5:-}"
+    local theme="$1" icon_theme="$2" font="$3" font_size="${4:-12}"
+    local qt_theme="${5:-}" mono_font="${6:-}" term_font="${7:-}"
 
     # GTK3
     mkdir -p "$(dirname "$GTK_SETTINGS")"
@@ -240,35 +241,53 @@ gtk-xft-rgba=rgb
 EOF
     ok "GTK4: tema=${theme} ícones=${icon_theme} fonte=${font}"
 
-    # Qt5
+    # Qt5 — style + icons + fonts
     local qt5_conf="${HOME}/.config/qt5ct/qt5ct.conf"
     mkdir -p "$(dirname "$qt5_conf")"
     if [[ -f "$qt5_conf" ]]; then
         [[ -n "$qt_theme" ]] && sed -i "s/^style\s*=.*/style = ${qt_theme}/" "$qt5_conf" 2>/dev/null
         sed -i "s/^icon_theme\s*=.*/icon_theme = ${icon_theme}/" "$qt5_conf" 2>/dev/null
+        if [[ -n "$mono_font" ]]; then
+            local qt5_mono="\"${mono_font},${font_size},-1,5,50,0,0,0,0,0\""
+            if grep -q "^fixed\s*=" "$qt5_conf" 2>/dev/null; then
+                sed -i "s/^fixed\s*=.*/fixed = ${qt5_mono}/" "$qt5_conf"
+            else
+                echo "fixed = ${qt5_mono}" >> "$qt5_conf"
+            fi
+        fi
     else
         {
             echo "[Appearance]"
             [[ -n "$qt_theme" ]] && echo "style = ${qt_theme}"
             echo "icon_theme = ${icon_theme}"
+            [[ -n "$mono_font" ]] && echo "fixed = \"${mono_font},${font_size},-1,5,50,0,0,0,0,0\""
         } > "$qt5_conf"
     fi
-    ok "Qt5: tema=${qt_theme:-padrão} ícones=${icon_theme}"
+    ok "Qt5: tema=${qt_theme:-padrão} mono=${mono_font:-padrão}"
 
-    # Qt6
+    # Qt6 — style + icons + fonts
     local qt6_conf="${HOME}/.config/qt6ct/qt6ct.conf"
     mkdir -p "$(dirname "$qt6_conf")"
     if [[ -f "$qt6_conf" ]]; then
         [[ -n "$qt_theme" ]] && sed -i "s/^style\s*=.*/style = ${qt_theme}/" "$qt6_conf" 2>/dev/null
         sed -i "s/^icon_theme\s*=.*/icon_theme = ${icon_theme}/" "$qt6_conf" 2>/dev/null
+        if [[ -n "$mono_font" ]]; then
+            local qt6_mono="\"${mono_font},${font_size},-1,5,50,0,0,0,0,0,0,0,0,0,0,1,,0,0\""
+            if grep -q "^fixed\s*=" "$qt6_conf" 2>/dev/null; then
+                sed -i "s/^fixed\s*=.*/fixed = ${qt6_mono}/" "$qt6_conf"
+            else
+                echo "fixed = ${qt6_mono}" >> "$qt6_conf"
+            fi
+        fi
     else
         {
             echo "[Appearance]"
             [[ -n "$qt_theme" ]] && echo "style = ${qt_theme}"
             echo "icon_theme = ${icon_theme}"
+            [[ -n "$mono_font" ]] && echo "fixed = \"${mono_font},${font_size},-1,5,50,0,0,0,0,0,0,0,0,0,0,1,,0,0\""
         } > "$qt6_conf"
     fi
-    ok "Qt6: tema=${qt_theme:-padrão} ícones=${icon_theme}"
+    ok "Qt6: tema=${qt_theme:-padrão} mono=${mono_font:-padrão}"
 
     # Dolphin/KDE (kdeglobals)
     mkdir -p "$HOME/.config"
@@ -304,6 +323,48 @@ EOF
     fi
     ok "environment.d: GTK_THEME=${theme}"
 
+    # Fontconfig — mono font weight
+    if [[ -n "$mono_font" ]]; then
+        local fc_dir="${HOME}/.config/fontconfig"
+        mkdir -p "$fc_dir"
+        cat > "${fc_dir}/fonts.conf" << FCEOF
+<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+<fontconfig>
+  <alias>
+    <family>${mono_font}</family>
+    <prefer>
+      <font>
+        <family>${mono_font}</family>
+        <weight>bold</weight>
+      </font>
+    </prefer>
+  </alias>
+  <match target="font">
+    <test name="family" compare="contains">
+      <string>${mono_font}</string>
+    </test>
+    <edit name="weight" mode="assign" binding="strong">
+      <const>bold</const>
+    </edit>
+  </match>
+</fontconfig>
+FCEOF
+        fc-cache -f 2>/dev/null
+        ok "Fontconfig: ${mono_font} bold"
+    fi
+
+    # Kitty — terminal font
+    local kitty_conf="${HOME}/.config/kitty/kitty.conf"
+    if [[ -n "$term_font" ]] && [[ -f "$kitty_conf" ]]; then
+        if grep -q "^font_family" "$kitty_conf" 2>/dev/null; then
+            sed -i "s/^font_family.*/font_family ${term_font}/" "$kitty_conf"
+        else
+            echo "font_family ${term_font}" >> "$kitty_conf"
+        fi
+        ok "Kitty: ${term_font}"
+    fi
+
     # Firefox — force dark theme via user.js
     local ff_dir="${HOME}/.mozilla/firefox"
     if [[ -d "$ff_dir" ]]; then
@@ -316,7 +377,6 @@ EOF
             [[ -n "$ff_userjs" ]] && ff_userjs="${ff_userjs%/*}/user.js"
         fi
         if [[ -n "$ff_userjs" && -d "$(dirname "$ff_userjs")" ]]; then
-            # Remover config anterior se existir
             [[ -f "$ff_userjs" ]] && sed -i '/user_pref("ui.systemUsesDarkTheme"/d' "$ff_userjs"
             [[ -f "$ff_userjs" ]] && sed -i '/user_pref("widget.content gtk-theme-override"/d' "$ff_userjs"
             cat >> "$ff_userjs" << FFEOF
@@ -347,7 +407,6 @@ ENV
 # ══════════════════════════════════════════════════════════════════════════════
 FONTS_LIST=(
     "Ubuntu" "Ubuntu Bold" "Ubuntu Sans" "Ubuntu Sans Nerd Font"
-    "Ubuntu Mono" "Ubuntu Mono Nerd Font"
     "sans-serif" "Inter" "JetBrains Mono"
     "JetBrains Mono Nerd Font" "Fira Code" "FiraCode Nerd Font"
     "Cascadia Code" "Cascadia Code Nerd Font"
@@ -356,6 +415,29 @@ FONTS_LIST=(
     "MesloLGS NF" "Maple Mono NF"
     "Source Code Pro" "Hack Nerd Font"
     "Overpass" "Geist Mono"
+)
+
+MONO_FONTS_LIST=(
+    "Ubuntu Mono" "Ubuntu Mono Bold" "Ubuntu Mono Nerd Font" "Ubuntu Mono Nerd Font Bold"
+    "JetBrains Mono" "JetBrains Mono Bold" "JetBrains Mono Nerd Font"
+    "Fira Code" "Fira Code Bold"
+    "Cascadia Code" "Cascadia Code Nerd Font"
+    "Source Code Pro" "Source Code Pro Bold"
+    "Hack Nerd Font" "Iosevka Nerd Font"
+    "MesloLGS NF" "Maple Mono NF"
+)
+
+TERMINAL_FONTS_LIST=(
+    "Ubuntu Mono Nerd Font Bold"
+    "Ubuntu Mono Nerd Font"
+    "Ubuntu Mono Bold"
+    "Ubuntu Mono"
+    "JetBrains Mono Nerd Font"
+    "JetBrains Mono Bold"
+    "FiraCode Nerd Font"
+    "Cascadia Code Nerd Font"
+    "Hack Nerd Font"
+    "MesloLGS NF"
 )
 
 THEMES_LIST=(
@@ -724,7 +806,7 @@ menu_icon_theme() {
 
 menu_appearance() {
     header
-    echo -e "${W}${BD}  APPEARANCE (TEMAS + ÍCONES + FONTE)${D}"
+    echo -e "${W}${BD}  APPEARANCE (TEMAS + ÍCONES + FONTES)${D}"
     echo ""
 
     echo -e "${W}${BD}  TEMA GTK:${D}"
@@ -745,7 +827,7 @@ menu_appearance() {
     info "Ícones: $icons"
 
     echo ""
-    echo -e "${W}${BD}  FONTE:${D}"
+    echo -e "${W}${BD}  FONTE (UI):${D}"
     pick "Fonte" "${FONTS_LIST[@]}"
     local font="$_CHOICE"
     info "Fonte: $font"
@@ -757,19 +839,32 @@ menu_appearance() {
     info "Tamanho: $size"
 
     echo ""
+    echo -e "${W}${BD}  FONTE MONO (Qt apps, editores):${D}"
+    pick "Fonte Mono" "${MONO_FONTS_LIST[@]}"
+    local mono_font="$_CHOICE"
+    info "Fonte Mono: $mono_font"
+
+    echo ""
+    echo -e "${W}${BD}  FONTE TERMINAL (Kitty):${D}"
+    pick "Fonte Terminal" "${TERMINAL_FONTS_LIST[@]}"
+    local term_font="$_CHOICE"
+    info "Fonte Terminal: $term_font"
+
+    echo ""
     echo -e "${W}${BD}  RESUMO:${D}"
     echo ""
-    echo -e "  Tema GTK:   ${G}${theme}${D}"
-    echo -e "  Tema Qt:    ${G}${qt_theme}${D}"
-    echo -e "  Ícones:     ${G}${icons}${D}"
-    echo -e "  Fonte:      ${G}${font}${D}"
-    echo -e "  Tamanho:    ${G}${size}${D}"
+    echo -e "  Tema GTK:      ${G}${theme}${D}"
+    echo -e "  Tema Qt:       ${G}${qt_theme}${D}"
+    echo -e "  Ícones:        ${G}${icons}${D}"
+    echo -e "  Fonte UI:      ${G}${font} ${size}${D}"
+    echo -e "  Fonte Mono:    ${G}${mono_font}${D}"
+    echo -e "  Fonte Terminal: ${G}${term_font}${D}"
     echo ""
 
     if confirm "Aplicar appearance?"; then
         ensure_dir
         do_backup
-        apply_gtk_appearance "$theme" "$icons" "$font" "$size" "$qt_theme"
+        apply_gtk_appearance "$theme" "$icons" "$font" "$size" "$qt_theme" "$mono_font" "$term_font"
         echo ""
         info "Appearance aplicado!"
         maybe_reload
@@ -1092,7 +1187,9 @@ cli_mode() {
             local font="${4:-Ubuntu Bold}"
             local size="${5:-12}"
             local qt_theme="${6:-adwaita-dark}"
-            apply_gtk_appearance "$theme" "$icons" "$font" "$size" "$qt_theme"
+            local mono_font="${7:-Ubuntu Mono Bold}"
+            local term_font="${8:-Ubuntu Mono Nerd Font Bold}"
+            apply_gtk_appearance "$theme" "$icons" "$font" "$size" "$qt_theme" "$mono_font" "$term_font"
             ;;
         --cursor)
             apply_env_vars "" "${2:-Bibata-Modern-Ice}"
