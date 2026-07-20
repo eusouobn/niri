@@ -21,8 +21,6 @@ environment {
     BROWSER "firefox"
     // BROWSER "chromium"
     // BROWSER "brave-browser"
-    // Adiciona scripts ao PATH para executar direto no terminal
-    PATH "$HOME/.local/bin:$HOME/.config/scripts:$PATH"
 }
 
 input {
@@ -86,7 +84,7 @@ spawn-at-startup "xsettingsd"
 // Necessário para gufw, gnome-disk-utility e outros apps que usam pkexec
 // Funciona independente do shell, portável para qualquer setup
 spawn-at-startup "/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
-spawn-at-startup "qs" "-c" "noctalia-shell"
+spawn-at-startup "/usr/bin/qs" "-c" "noctalia-shell"
 // PROPAGAÇÃO DE VARIÁVEIS DE AMBIENTE PARA O SYSTEMD/DBUS
 // ──────────────────────────────────────────────────────────────────────────────
 // O block `environment {}` do Niri SÓ afeta processos que ele spawna diretamente
