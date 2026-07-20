@@ -173,9 +173,9 @@ OFFICIAL_PACKAGES=(
   dolphin dolphin-plugins kde-cli-tools kio unrar unrar-free unzip
   pacman-contrib kate cmake cmake-extras fish bc fastfetch inxi wget
   code gnome-calculator papers loupe btop gnome-disk-utility
-  gnome-text-editor ark kitty firefox vlc vlc-plugins-all mpv
+  gnome-text-editor ark kitty firefox mpv audacious audacious-plugins
   xdg-desktop-portal xdg-desktop-portal-gtk xdg-desktop-portal-wlr
-  xdg-desktop-portal-gnome bash-completion vlc-plugin-ffmpeg
+  xdg-desktop-portal-gnome bash-completion
   archlinux-xdg-menu xdg-user-dirs xdg-user-dirs-gtk sddm
   nwg-displays polkit-gnome wiremix network-manager-applet
   alsa-utils ffmpeg ffmpegthumbs ffmpegthumbnailer
