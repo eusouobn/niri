@@ -302,7 +302,6 @@ fi
 git clone https://github.com/eusouobn/niri.git /tmp/niri-dotfiles
 mkdir -p "$HOME/.config"
 cp -r /tmp/niri-dotfiles/.config/* "$HOME/.config/"
-rm -rf /tmp/niri-dotfiles
 
 # Restaurar backup do config.kdl se existia
 if [ -f /tmp/config.kdl.backup ]; then
@@ -513,18 +512,23 @@ quote
 # ──────────────────────────────────────────────
 step "⚡ Configurando variáveis de ambiente para systemd/DBus..."
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-mkdir -p "$HOME/.config/environment.d"
+# Os dotfiles já estão em ~/.config/ (copiados acima)
+# Copiar etc/ do repo se necessário
+DOTFILES_REPO="/tmp/niri-dotfiles"
+if [ ! -d "$DOTFILES_REPO" ]; then
+  git clone --depth=1 https://github.com/eusouobn/niri.git "$DOTFILES_REPO" 2>/dev/null || true
+fi
 
-if [ -f "$SCRIPT_DIR/.config/environment.d/01-xdg-base.conf" ]; then
-  cp "$SCRIPT_DIR/.config/environment.d/01-xdg-base.conf" "$HOME/.config/environment.d/"
-  # Ajusta $HOME para o usuário real
+if [ -f "$DOTFILES_REPO/.config/environment.d/01-xdg-base.conf" ]; then
+  mkdir -p "$HOME/.config/environment.d"
+  cp "$DOTFILES_REPO/.config/environment.d/01-xdg-base.conf" "$HOME/.config/environment.d/"
   sed -i "s|\$HOME|$HOME|g" "$HOME/.config/environment.d/01-xdg-base.conf"
   ok "01-xdg-base.conf criado — diretórios XDG"
 fi
 
-if [ -f "$SCRIPT_DIR/.config/environment.d/10-kde-on-niri.conf" ]; then
-  cp "$SCRIPT_DIR/.config/environment.d/10-kde-on-niri.conf" "$HOME/.config/environment.d/"
+if [ -f "$DOTFILES_REPO/.config/environment.d/10-kde-on-niri.conf" ]; then
+  mkdir -p "$HOME/.config/environment.d"
+  cp "$DOTFILES_REPO/.config/environment.d/10-kde-on-niri.conf" "$HOME/.config/environment.d/"
   ok "10-kde-on-niri.conf criado — variáveis Qt/KDE para systemd"
 fi
 
@@ -538,9 +542,9 @@ quote
 # ──────────────────────────────────────────────
 step "⚡ Instalando hook do Pacman para cache KDE..."
 
-if [ -f "$SCRIPT_DIR/etc/pacman.d/hooks/kde-cache.hook" ]; then
+if [ -f "$DOTFILES_REPO/etc/pacman.d/hooks/kde-cache.hook" ]; then
   sudo mkdir -p /etc/pacman.d/hooks
-  sudo cp "$SCRIPT_DIR/etc/pacman.d/hooks/kde-cache.hook" /etc/pacman.d/hooks/
+  sudo cp "$DOTFILES_REPO/etc/pacman.d/hooks/kde-cache.hook" /etc/pacman.d/hooks/
   ok "Hook instalado — kbuildsycoca6 roda após toda transação do pacman"
   info "Funciona para TODOS os usuários do sistema (usa loginctl + sudo -u)"
   info "com as variáveis XDG_RUNTIME_DIR e DBUS_SESSION_BUS_ADDRESS corretas."
@@ -552,9 +556,9 @@ quote
 # ──────────────────────────────────────────────
 step "💾 Configurando escrita síncrona para USB..."
 
-if [ -f "$SCRIPT_DIR/etc/udisks2/mount_options.conf" ]; then
+if [ -f "$DOTFILES_REPO/etc/udisks2/mount_options.conf" ]; then
   sudo mkdir -p /etc/udisks2
-  sudo cp "$SCRIPT_DIR/etc/udisks2/mount_options.conf" /etc/udisks2/
+  sudo cp "$DOTFILES_REPO/etc/udisks2/mount_options.conf" /etc/udisks2/
   sudo systemctl restart udisks2 2>/dev/null || true
   ok "udisks2 configurado — USBs escrevem direto no disco (sem cache)"
   info "Barra de progresso do Dolphin agora mostra o progresso real"
@@ -1182,6 +1186,9 @@ echo -e "  ${CYAN}[3]${NC} Sair (voltar ao terminal)"
 echo ""
 echo -n "  Escolha [1/2/3]: "
 read -r choice
+
+# Limpar repo temporário
+rm -rf /tmp/niri-dotfiles
 
 case "$choice" in
   1)
