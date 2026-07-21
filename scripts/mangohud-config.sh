@@ -83,9 +83,9 @@ cpu_short_name() {
             return
         fi
     fi
-    # Intel Ultra: "Intel(R) Core(TM) Ultra 9 285K" → "Ultra 9"
+    # Intel Ultra: "Intel(R) Core(TM) Ultra 9 285K" → "Ultra 9 285K"
     if echo "$full" | grep -qi "ultra"; then
-        echo "$full" | grep -oiP "Ultra\s+\d+" | head -1
+        echo "$full" | grep -oiP "Ultra\s+\d+\s+\S+" | head -1
         return
     fi
     # Fallback: retorna tudo menos "Processor" e sufixos
