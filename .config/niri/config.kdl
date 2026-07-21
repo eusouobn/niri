@@ -73,7 +73,9 @@ layout {
     default-column-width { proportion 0.5; }
 }
 
-// xwayland-satellite é iniciado automaticamente pelo niri desde a versão 25.08
+// xwayland-satellite — servidor X11 compatível para apps que precisam de X
+// Necessário para Steam, Wine/Proton e outros apps X11 no Wayland
+spawn-at-startup "xwayland-satellite"
 // Permite root usar o display X11 (necessário para gufw e outros apps com pkexec/sudo)
 spawn-at-startup "xhost" "+SI:localuser:root"
 // xsettingsd — propaga tema de ícone, fonte e cursor globalmente
