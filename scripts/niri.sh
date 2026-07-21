@@ -85,6 +85,73 @@ if [ "$EUID" -eq 0 ]; then
 fi
 
 # ──────────────────────────────────────────────
+# --reset: limpa tudo antes de reinstalar
+# ──────────────────────────────────────────────
+RESET_MODE=false
+for arg in "$@"; do
+  case "$arg" in
+    --reset) RESET_MODE=true ;;
+  esac
+done
+
+if [ "$RESET_MODE" = true ]; then
+  echo ""
+  echo -e "  ${RED}███  MODO RESET  ███${NC}"
+  echo ""
+  echo -e "  ${YELLOW}⚠${NC} Isso vai APAGAR completamente:"
+  echo -e "     ~/.config/niri/"
+  echo -e "     ~/.config/noctalia/"
+  echo -e "     ~/.config/kitty/"
+  echo -e "     ~/.config/fish/"
+  echo -e "     ~/.config/environment.d/"
+  echo -e "     ~/.config/scripts/"
+  echo -e "     ~/.config/MangoHud/"
+  echo -e "     ~/.config/qt5ct/ ~/.config/qt6ct/"
+  echo -e "     ~/.config/gtk-3.0/ ~/.config/gtk-4.0/"
+  echo -e "     ~/.config/kdeglobals ~/.xsettingsd"
+  echo -e "     ~/.config/autostart/"
+  echo -e "     ~/.config/fontconfig/"
+  echo -e "     /tmp/niri-dotfiles/"
+  echo ""
+  echo -n "  ${RED}⌨${NC} Tem certeza? (digite ${BOLD}SIM${NC} para confirmar): "
+  read -r CONFIRM
+  if [ "$CONFIRM" != "SIM" ]; then
+    echo -e "  ${GREEN}✔${NC} Cancelado."
+    exit 0
+  fi
+
+  echo ""
+  echo -e "  ${RED}→${NC} Limpando configs antigas..."
+  rm -rf "$HOME/.config/niri"
+  rm -rf "$HOME/.config/noctalia"
+  rm -rf "$HOME/.config/kitty"
+  rm -rf "$HOME/.config/fish"
+  rm -rf "$HOME/.config/environment.d"
+  rm -rf "$HOME/.config/scripts"
+  rm -rf "$HOME/.config/MangoHud"
+  rm -rf "$HOME/.config/qt5ct"
+  rm -rf "$HOME/.config/qt6ct"
+  rm -rf "$HOME/.config/gtk-3.0"
+  rm -rf "$HOME/.config/gtk-4.0"
+  rm -rf "$HOME/.config/autostart"
+  rm -rf "$HOME/.config/fontconfig"
+  rm -f  "$HOME/.config/kdeglobals"
+  rm -f  "$HOME/.xsettingsd"
+  rm -rf /tmp/niri-dotfiles
+
+  # Re-clonar dotfiles limpos do GitHub
+  echo -e "  ${CYAN}→${NC} Re-clonando dotfiles do GitHub..."
+  git clone https://github.com/eusouobn/niri.git /tmp/niri-dotfiles
+  mkdir -p "$HOME/.config"
+  cp -r /tmp/niri-dotfiles/.config/* "$HOME/.config/"
+  chmod +x "$HOME/.config/scripts/"*.sh 2>/dev/null || true
+  ok "Dotfiles limpos restaurados do GitHub"
+  echo ""
+  echo -e "  ${GREEN}✔${NC} Reset completo! Continuando com instalação..."
+  echo ""
+fi
+
+# ──────────────────────────────────────────────
 # 1. Boas-vindas
 # ──────────────────────────────────────────────
 banner
