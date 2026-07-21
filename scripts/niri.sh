@@ -912,7 +912,7 @@ command -v nwg-look &>/dev/null && nwg-look -a 2>&1 || true
 write_gtk_dark "$HOME/.config/gtk-3.0/settings.ini"
 write_gtk_dark "$HOME/.config/gtk-4.0/settings.ini"
 
-# KDE/Dolphin: forçar Papirus-Dark via kdeglobals
+# KDE/Dolphin: kdeglobals completo
 mkdir -p "$HOME/.config"
 if [ -f "$HOME/.config/kdeglobals" ]; then
   # Seção [Icons] — onde o Dolphin realmente lê
@@ -925,10 +925,174 @@ if [ -f "$HOME/.config/kdeglobals" ]; then
   else
     echo -e "\n[Icons]\nTheme=Papirus-Dark" >> "$HOME/.config/kdeglobals"
   fi
+  # Seção [KDE] — widgetStyle para qt6ct
+  if grep -q "^\[KDE\]" "$HOME/.config/kdeglobals"; then
+    if grep -q "^widgetStyle=" "$HOME/.config/kdeglobals"; then
+      sed -i 's/^widgetStyle=.*/widgetStyle=qt6ct-style/' "$HOME/.config/kdeglobals"
+    else
+      sed -i '/^\[KDE\]/a widgetStyle=qt6ct-style' "$HOME/.config/kdeglobals"
+    fi
+  else
+    echo -e "\n[KDE]\nwidgetStyle=qt6ct-style" >> "$HOME/.config/kdeglobals"
+  fi
 else
   cat > "$HOME/.config/kdeglobals" << 'KDEEOF'
+[ColorEffects:Disabled]
+Color=5,8,14
+ColorAmount=0
+ColorEffect=0
+ContrastAmount=0.65
+ContrastEffect=1
+IntensityAmount=0.1
+IntensityEffect=2
+
+[ColorEffects:Inactive]
+ChangeSelectionColor=true
+Color=22,27,34
+ColorAmount=0.025
+ColorEffect=2
+ContrastAmount=0.1
+ContrastEffect=2
+Enable=false
+IntensityAmount=0
+IntensityEffect=0
+
+[Colors:Button]
+BackgroundAlternate=11,15,21
+BackgroundNormal=30,37,46
+DecorationFocus=88,166,255
+DecorationHover=88,166,255
+ForegroundActive=88,166,255
+ForegroundInactive=139,148,158
+ForegroundLink=188,140,255
+ForegroundNegative=248,81,73
+ForegroundNeutral=188,140,255
+ForegroundNormal=201,209,217
+ForegroundPositive=188,140,255
+ForegroundVisited=225,204,255
+
+[Colors:Complementary]
+BackgroundAlternate=11,15,21
+BackgroundNormal=1,4,9
+DecorationFocus=88,166,255
+DecorationHover=88,166,255
+ForegroundActive=88,166,255
+ForegroundInactive=139,148,158
+ForegroundLink=188,140,255
+ForegroundNegative=248,81,73
+ForegroundNeutral=188,140,255
+ForegroundNormal=204,228,255
+ForegroundPositive=188,140,255
+ForegroundVisited=225,204,255
+
+[Colors:Header]
+BackgroundAlternate=1,4,9
+BackgroundNormal=22,27,34
+DecorationFocus=88,166,255
+DecorationHover=88,166,255
+ForegroundActive=88,166,255
+ForegroundInactive=139,148,158
+ForegroundLink=188,140,255
+ForegroundNegative=248,81,73
+ForegroundNeutral=188,140,255
+ForegroundNormal=201,209,217
+ForegroundPositive=188,140,255
+ForegroundVisited=225,204,255
+
+[Colors:Header][Inactive]
+BackgroundAlternate=22,27,34
+BackgroundNormal=1,4,9
+DecorationFocus=88,166,255
+DecorationHover=88,166,255
+ForegroundActive=88,166,255
+ForegroundInactive=139,148,158
+ForegroundLink=188,140,255
+ForegroundNegative=248,81,73
+ForegroundNeutral=188,140,255
+ForegroundNormal=201,209,217
+ForegroundPositive=188,140,255
+ForegroundVisited=225,204,255
+
+[Colors:Selection]
+BackgroundAlternate=11,15,21
+BackgroundNormal=88,166,255
+DecorationFocus=88,166,255
+DecorationHover=88,166,255
+ForegroundActive=1,4,9
+ForegroundInactive=139,148,158
+ForegroundLink=188,140,255
+ForegroundNegative=142,7,0
+ForegroundNeutral=90,0,217
+ForegroundNormal=1,4,9
+ForegroundPositive=90,0,217
+ForegroundVisited=225,204,255
+
+[Colors:Tooltip]
+BackgroundAlternate=1,4,9
+BackgroundNormal=22,27,34
+DecorationFocus=88,166,255
+DecorationHover=88,166,255
+ForegroundActive=88,166,255
+ForegroundInactive=139,148,158
+ForegroundLink=188,140,255
+ForegroundNegative=248,81,73
+ForegroundNeutral=188,140,255
+ForegroundNormal=201,209,217
+ForegroundPositive=188,140,255
+ForegroundVisited=225,204,255
+
+[Colors:View]
+BackgroundAlternate=22,27,34
+BackgroundNormal=1,4,9
+DecorationFocus=204,228,255
+DecorationHover=1,4,9
+ForegroundActive=88,166,255
+ForegroundInactive=139,148,158
+ForegroundLink=188,140,255
+ForegroundNegative=248,81,73
+ForegroundNeutral=188,140,255
+ForegroundNormal=201,209,217
+ForegroundPositive=188,140,255
+ForegroundVisited=225,204,255
+
+[Colors:Window]
+BackgroundAlternate=0,77,165
+BackgroundNormal=22,27,34
+DecorationFocus=88,166,255
+DecorationHover=88,166,255
+ForegroundActive=88,166,255
+ForegroundInactive=139,148,158
+ForegroundLink=188,140,255
+ForegroundNegative=248,81,73
+ForegroundNeutral=188,140,255
+ForegroundNormal=201,209,217
+ForegroundPositive=188,140,255
+ForegroundVisited=225,204,255
+
+[General]
+ColorScheme=Noctalia
+Name=noctalia
+fixed=Ubuntu Mono Bold,11,-1,5,50,0,0,0,0,0
+font=Ubuntu Bold,11,-1,5,50,0,0,0,0,0
+
 [Icons]
 Theme=Papirus-Dark
+
+[KDE]
+contrast=4
+widgetStyle=qt6ct-style
+
+[PreviewSettings]
+EnableRemoteFolderThumbnail=false
+MaximumRemoteSize=0
+
+[WM]
+activeBackground=0,77,165
+activeBlend=204,228,255
+activeForeground=204,228,255
+inactiveBackground=1,4,9
+inactiveBlend=139,148,158
+inactiveForeground=139,148,158
 KDEEOF
 fi
 ok "Dolphin/KDE: Papirus-Dark definido via kdeglobals"

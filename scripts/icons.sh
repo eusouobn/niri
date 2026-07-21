@@ -114,8 +114,16 @@ EOF
     fi
   else
     cat > "$HOME/.config/kdeglobals" << EOF
+[General]
+font=Ubuntu Bold,11,-1,5,50,0,0,0,0,0
+fixed=Ubuntu Mono Bold,11,-1,5,50,0,0,0,0,0
+
 [Icons]
 Theme=$theme
+
+[KDE]
+contrast=4
+widgetStyle=qt6ct-style
 EOF
   fi
   ok "Dolphin/KDE: $theme"
