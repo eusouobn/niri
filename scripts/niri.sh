@@ -1210,28 +1210,6 @@ XSETEOF
 fi
 
 # ──────────────────────────────────────────────
-# 13b. Detectar DISPLAY correto para Xwayland
-# ──────────────────────────────────────────────
-step "🖥️ Detectando DISPLAY para Xwayland..."
-
-# Verificar se :0 já está em uso (ex: SDDM)
-CORRECT_DISPLAY=":0"
-if [ -e /tmp/.X11-unix/X0 ]; then
-  CORRECT_DISPLAY=":1"
-  info "DISPLAY :0 já em uso → usando :1"
-else
-  info "DISPLAY :0 disponível → usando :0"
-fi
-
-# Atualizar config.kdl
-CONFIG_KDL_DISPLAY="$HOME/.config/niri/config.kdl"
-if [ -f "$CONFIG_KDL_DISPLAY" ]; then
-  sed -i "s/^    DISPLAY \".*\"/    DISPLAY \"$CORRECT_DISPLAY\"/" "$CONFIG_KDL_DISPLAY"
-  ok "DISPLAY definido como $CORRECT_DISPLAY no config.kdl"
-fi
-quote
-
-# ──────────────────────────────────────────────
 # 14. Final — escolha do usuário
 # ──────────────────────────────────────────────
 clear 2>/dev/null || true

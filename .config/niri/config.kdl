@@ -15,7 +15,6 @@ environment {
     GTK_APPLICATION_PREFER_DARK_THEME "1"
     XDG_MENU_PREFIX "arch-"
     XDG_CURRENT_DESKTOP "niri"
-    DISPLAY ":1"
     // Navegador padrão do sistema
     // `xdg-open` e outros apps usam essa variável pra saber qual navegador chamar
     BROWSER "firefox"
