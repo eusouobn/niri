@@ -210,6 +210,12 @@ window-rule {
 }
 
 window-rule {
+    match app-id=r"^org\.kde\.gwenview$"
+    open-floating true
+    floating-position x="center" y="center"
+}
+
+window-rule {
     geometry-corner-radius 12
     clip-to-geometry true
 }
