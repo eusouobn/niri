@@ -290,7 +290,7 @@ AUR_PACKAGES=(
   qt6ct-kde ttf-ms-fonts
   orchis-theme adw-gtk-theme
   steam steam-devices heroic-games-launcher-bin
-  protonplus mangohud cliphist wev
+  protonplus mangohud lib32-mangohud cliphist wev
 )
 
 step "🌟 Instalando pacotes AUR..."

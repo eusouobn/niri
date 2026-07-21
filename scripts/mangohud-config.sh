@@ -66,6 +66,32 @@ short_name() {
     echo "$full_name"
 }
 
+# ── Extrair nome curto do CPU ─────────────────────────────
+cpu_short_name() {
+    local full="$1"
+    # AMD: "AMD Ryzen 5 7500F 6-Core Processor" → "7500F"
+    if echo "$full" | grep -qi "amd\|ryzen"; then
+        echo "$full" | grep -oiP "Ryzen\s+\d+\s+\K\S+" | head -1
+        return
+    fi
+    # Intel Core: "Intel(R) Core(TM) i5-10400F" → "i5 10400F"
+    if echo "$full" | grep -qi "core"; then
+        local model
+        model=$(echo "$full" | grep -oiP "i[3579]-\S+" | head -1)
+        if [ -n "$model" ]; then
+            echo "$model" | sed 's/-/ /'
+            return
+        fi
+    fi
+    # Intel Ultra: "Intel(R) Core(TM) Ultra 9 285K" → "Ultra 9"
+    if echo "$full" | grep -qi "ultra"; then
+        echo "$full" | grep -oiP "Ultra\s+\d+" | head -1
+        return
+    fi
+    # Fallback: retorna tudo menos "Processor" e sufixos
+    echo "$full" | sed 's/([^(]*)//g' | sed 's/ Processor//' | sed 's/ [0-9]*-Core.*//' | xargs
+}
+
 # ── Main ──────────────────────────────────────────────────
 echo ""
 echo -e "${BOLD}  MangoHud Config Generator${NC}"
@@ -75,8 +101,7 @@ CPU_FULL=$(detect_cpu)
 GPU_FULL=$(detect_gpu)
 GPU_SHORT=$(short_name "$GPU_FULL")
 
-# Para CPU, extrair só o nome (ex: "AMD Ryzen 5 7500F")
-CPU_SHORT=$(echo "$CPU_FULL" | sed 's/([^(]*)//g' | sed 's/ CPU//' | sed 's/ [0-9]*-Core.*//' | xargs)
+CPU_SHORT=$(cpu_short_name "$CPU_FULL")
 
 info "CPU: ${BOLD}$CPU_FULL${NC}"
 info "GPU: ${BOLD}$GPU_FULL${NC}"
