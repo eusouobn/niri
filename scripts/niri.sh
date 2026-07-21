@@ -366,6 +366,7 @@ if [ -f "$HOME/.config/niri/config.kdl" ]; then
 fi
 
 # Clonar e copiar (sempre sobrescreve)
+rm -rf /tmp/niri-dotfiles
 git clone https://github.com/eusouobn/niri.git /tmp/niri-dotfiles
 mkdir -p "$HOME/.config"
 cp -r /tmp/niri-dotfiles/.config/* "$HOME/.config/"
