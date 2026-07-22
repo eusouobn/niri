@@ -66,6 +66,34 @@ short_name() {
     echo "$full_name"
 }
 
+# ── Detectar resolução e ajustar font_size ────────────────
+detect_font_size() {
+    local height=1080
+    # Tentar via wlr-randr (Wayland)
+    if command -v wlr-randr &>/dev/null; then
+        height=$(wlr-randr 2>/dev/null | grep -oP '\d+x\K\d+' | sort -rn | head -1)
+    # Tentar via xrandr (XWayland)
+    elif command -v xrandr &>/dev/null; then
+        height=$(xrandr 2>/dev/null | grep '\*' | grep -oP '\d+x\K\d+' | sort -rn | head -1)
+    fi
+    height=${height:-1080}
+
+    # Calcular font_size proporcional à resolução vertical
+    # 2160p (4K) = 58, 1440p = 38, 1080p = 28
+    local font_size
+    if [ "$height" -ge 2000 ]; then
+        font_size=58
+    elif [ "$height" -ge 1300 ]; then
+        font_size=38
+    elif [ "$height" -ge 700 ]; then
+        font_size=28
+    else
+        font_size=22
+    fi
+
+    echo "$font_size"
+}
+
 # ── Extrair nome curto do CPU ─────────────────────────────
 cpu_short_name() {
     local full="$1"
@@ -102,11 +130,13 @@ GPU_FULL=$(detect_gpu)
 GPU_SHORT=$(short_name "$GPU_FULL")
 
 CPU_SHORT=$(cpu_short_name "$CPU_FULL")
+FONT_SIZE=$(detect_font_size)
 
 info "CPU: ${BOLD}$CPU_FULL${NC}"
 info "GPU: ${BOLD}$GPU_FULL${NC}"
 info "CPU short: $CPU_SHORT"
 info "GPU short: $GPU_SHORT"
+info "Resolução detectada: font_size=${FONT_SIZE}"
 echo ""
 
 # ── Gerar config ──────────────────────────────────────────
