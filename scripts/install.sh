@@ -504,7 +504,7 @@ case "$VIDEODRIVER" in
     arch-chroot /mnt pacman -S --noconfirm nvidia nvidia-utils lib32-nvidia-utils
     ;;
   Nvidia-Open)
-    arch-chroot /mnt pacman -S --noconfirm nvidia-open nvidia-utils lib32-nvidia-utils
+    arch-chroot /mnt pacman -S --noconfirm nvidia-open-dkms nvidia-utils lib32-nvidia-utils
     ;;
   *)
     DRIVER_LOWER=$(echo "$VIDEODRIVER" | tr '[:upper:]' '[:lower:]')
