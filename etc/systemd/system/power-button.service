@@ -1,0 +1,8 @@
+[Unit]
+Description=Desligamento via botão Power com countdown
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/power-button.sh
+RemainAfterExit=no

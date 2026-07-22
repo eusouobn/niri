@@ -1,0 +1,2 @@
+# Regra udev para botão Power — chama systemd service
+ACTION=="button/power", TAG+="systemd", ENV{SYSTEMD_WANTS}+="power-button.service"

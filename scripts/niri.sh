@@ -855,9 +855,20 @@ IdleActionSec=infinity
 HandleSuspendKey=ignore
 HandleHibernateKey=ignore
 HandleLidSwitch=ignore
+# Botão Power: ignora logind (script customizado via udev)
+HandlePowerKey=ignore
 LOGIND
 
 ok "systemd-logind configurado: sem suspensão automática"
+
+# Instalar script do botão Power com countdown
+sudo cp "$(dirname "$0")/../etc/udev/rules.d/power-button.sh" /usr/local/bin/power-button.sh 2>/dev/null || \
+  sudo install -Dm755 "$(dirname "$0")/../etc/udev/rules.d/power-button.sh" /usr/local/bin/power-button.sh 2>/dev/null || true
+sudo cp "$(dirname "$0")/../etc/systemd/system/power-button.service" /etc/systemd/system/power-button.service 2>/dev/null || true
+sudo cp "$(dirname "$0")/../etc/udev/rules.d/99-power-button.rules" /etc/udev/rules.d/99-power-button.rules 2>/dev/null || true
+sudo udevadm control --reload-rules 2>/dev/null || true
+sudo systemctl daemon-reload 2>/dev/null || true
+ok "Botão Power: desligamento com 10s de delay + notificação"
 
 # Configurar swayidle para desligar monitor após 30 minutos
 # O swayidle já está no config.kdl via spawn-at-startup
