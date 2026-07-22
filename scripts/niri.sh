@@ -459,6 +459,36 @@ print('plugins.json atualizado')
 " || warn "Falha ao atualizar plugins.json"
 
 # ──────────────────────────────────────────────
+# 5d. Configurar idle do Noctalia (desabilitar suspend automático)
+# ──────────────────────────────────────────────
+NOCTALIA_SETTINGS="$HOME/.config/noctalia/settings.json"
+if [ -f "$NOCTALIA_SETTINGS" ]; then
+  python3 -c "
+import json
+
+with open('$NOCTALIA_SETTINGS', 'r') as f:
+    data = json.load(f)
+
+# Desabilitar suspend automático do idle
+idle = data.get('idle', {})
+idle['lockTimeout'] = 0
+idle['suspendTimeout'] = 0
+idle['screenOffTimeout'] = 1800  # 30 minutos
+data['idle'] = idle
+
+# Desabilitar ação de suspend nos botões de sessão
+for btn in data.get('session', {}).get('buttons', []):
+    if btn.get('action') == 'suspend':
+        btn['enabled'] = False
+
+with open('$NOCTALIA_SETTINGS', 'w') as f:
+    json.dump(data, f, indent=4)
+
+print('Noctalia idle configurado: sem suspend automático')
+" && ok "Noctalia: suspend automático desabilitado" || warn "Falha ao configurar idle do Noctalia"
+fi
+
+# ──────────────────────────────────────────────
 # 6c. Configuração NVIDIA para Wayland
 # ──────────────────────────────────────────────
 if lspci | grep -qi nvidia; then
