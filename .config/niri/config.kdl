@@ -115,6 +115,10 @@ spawn-at-startup "dbus-update-activation-environment" "--systemd" "--all"
 // O kded6 (acima) mantém o cache atualizado incrementalmente durante o uso.
 // Caminho absoluto para garantir que funcione independente do PATH do Niri
 spawn-at-startup "/usr/bin/kbuildsycoca6" "--noincremental"
+// Desliga monitores após 30 minutos de inatividade
+// Ativa com qualquer tecla/mouse
+spawn-at-startup "swayidle" "-w" \
+    "timeout" "1800" "niri msg action power-off-monitors"
 
 prefer-no-csd
 

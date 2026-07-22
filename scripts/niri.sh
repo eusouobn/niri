@@ -830,44 +830,12 @@ LOGIND
 ok "systemd-logind configurado: sem suspensão automática"
 
 # Configurar swayidle para desligar monitor após 30 minutos
-mkdir -p "$HOME/.config/scripts"
-
-# Criar script de idle management
-cat > "$HOME/.config/scripts/swayidle-handler.sh" << 'IDLEEOF'
-#!/bin/bash
-# Gerenciamento de idle para Niri
-# Desliga monitor após 30 minutos de inatividade
-
-TIMEOUT=$((30 * 60))  # 30 minutos em segundos
-
-# Usar swayidle se disponível
+# O swayidle já está no config.kdl via spawn-at-startup
+# Aqui só garantimos que o logind.conf NÃO suspende
 if command -v swayidle &>/dev/null; then
-  exec swayidle -w \
-    timeout "$TIMEOUT" "niri msg output '*' dpms off" \
-    resume "niri msg output '*' dpms on"
-fi
-
-# Fallback: usar xset (para XWayland)
-if command -v xset &>/dev/null; then
-  xset s "$TIMEOUT" "$TIMEOUT"
-  xset +dpms
-  xset dpms 0 0 "$TIMEOUT"
-fi
-IDLEEOF
-chmod +x "$HOME/.config/scripts/swayidle-handler.sh"
-
-# Adicionar spawn-at-startup no config.kdl para swayidle
-CONFIG_KDL_POWER="$HOME/.config/niri/config.kdl"
-if command -v swayidle &>/dev/null; then
-  if ! grep -qF "swayidle-handler" "$CONFIG_KDL_POWER" 2>/dev/null; then
-    sed -i '/spawn-at-startup "xsettingsd"/a\spawn-at-startup "~/.config/scripts/swayidle-handler.sh"' "$CONFIG_KDL_POWER"
-    ok "swayidle adicionado ao config.kdl (desliga monitor em 30min)"
-  else
-    ok "swayidle já está no config.kdl"
-  fi
+  ok "swayidle: monitores desligam após 30min de inatividade"
 else
-  warn "swayidle não encontrado. Instale: yay -S swayidle"
-  info "Ou configure manualmente o timeout do monitor"
+  warn "swayidle não encontrado. Instale: sudo pacman -S swayidle"
 fi
 
 # Configurar GNOME Settings de energia (se gnome-control-center disponível)
