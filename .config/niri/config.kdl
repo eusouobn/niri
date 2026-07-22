@@ -219,6 +219,14 @@ window-rule {
 }
 
 window-rule {
+    match app-id=r"^org\.kde\.kcalc$"
+    open-floating true
+    default-floating-position x=640 y=480
+    default-floating-width 320
+    default-floating-height 400
+}
+
+window-rule {
     geometry-corner-radius 12
     clip-to-geometry true
 }

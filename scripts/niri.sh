@@ -239,7 +239,7 @@ fi
 OFFICIAL_PACKAGES=(
   dolphin dolphin-plugins kde-cli-tools kio unrar unrar-free unzip
   pacman-contrib kate cmake cmake-extras fish bc fastfetch inxi wget
-  code gnome-calculator papers gwenview btop gnome-disk-utility
+  code kcalc papers gwenview btop gnome-disk-utility
   gnome-text-editor ark kitty firefox mpv audacious audacious-plugins
   xdg-desktop-portal xdg-desktop-portal-gtk xdg-desktop-portal-wlr
   xdg-desktop-portal-gnome bash-completion
@@ -278,6 +278,13 @@ if pacman -Qi nautilus &>/dev/null; then
   info "Removendo nautilus (puxado como dependência)..."
   sudo pacman -Rdd --noconfirm nautilus > /dev/null 2>&1 || true
   ok "nautilus removido"
+fi
+
+# Garantir que gnome-calculator não foi puxado como dependência (usamos kcalc)
+if pacman -Qi gnome-calculator &>/dev/null; then
+  info "Removendo gnome-calculator (usamos kcalc)..."
+  sudo pacman -Rdd --noconfirm gnome-calculator > /dev/null 2>&1 || true
+  ok "gnome-calculator removido"
 fi
 quote
 

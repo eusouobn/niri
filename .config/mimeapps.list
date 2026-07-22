@@ -1,0 +1,19 @@
+[Default Applications]
+x-scheme-handler/http=firefox.desktop
+x-scheme-handler/https=firefox.desktop
+x-scheme-handler/about=firefox.desktop
+text/html=firefox.desktop
+application/xhtml+xml=firefox.desktop
+inode/directory=dolphin.desktop
+video/mp4=mpv.desktop
+video/x-matroska=mpv.desktop
+audio/x-flac=audacious.desktop
+audio/mpeg=audacious.desktop
+image/png=gwenview.desktop
+image/jpeg=gwenview.desktop
+application/x-bittorrent=firefox.desktop
+x-scheme-handler/magnet=firefox.desktop
+x-scheme-handler/terminal=org.kde.kcalc.desktop
+x-scheme-handler/calculator=org.kde.kcalc.desktop
+inode/x-empty=org.kate.kate.desktop
+text/plain=org.kate.kate.desktop
