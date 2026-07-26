@@ -932,6 +932,14 @@ command -v nwg-look &>/dev/null && nwg-look -a 2>&1 || true
 write_gtk_dark "$HOME/.config/gtk-3.0/settings.ini"
 write_gtk_dark "$HOME/.config/gtk-4.0/settings.ini"
 
+# Sincronizar com gsettings (Firefox e apps GNOME leem daqui)
+if command -v gsettings &>/dev/null; then
+  gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark' 2>/dev/null || true
+  gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null || true
+  gsettings set org.gnome.desktop.interface icon-theme 'Papirus-Dark' 2>/dev/null || true
+  ok "gsettings sincronizado (gtk-theme, color-scheme, icon-theme)"
+fi
+
 # KDE/Dolphin: kdeglobals completo
 mkdir -p "$HOME/.config"
 if [ -f "$HOME/.config/kdeglobals" ]; then

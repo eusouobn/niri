@@ -138,6 +138,12 @@ EOF
     ok "xsettingsd: $theme"
   fi
 
+  # gsettings — Firefox e apps GNOME leem daqui
+  if command -v gsettings &>/dev/null; then
+    gsettings set org.gnome.desktop.interface icon-theme "$theme" 2>/dev/null || true
+    ok "gsettings: icon-theme=$theme"
+  fi
+
   echo ""
   echo -e "  ${GREEN}${BOLD}✔ Icon theme \"$theme\" aplicado globalmente!${NC}"
   echo -e "  ${YELLOW}Reinicie os apps para ver as mudanças${NC}"
