@@ -1156,6 +1156,39 @@ xdg-mime default audacious.desktop audio/x-flac
 xdg-mime default audacious.desktop audio/ogg
 xdg-mime default audacious.desktop audio/x-wav
 xdg-mime default audacious.desktop audio/aac
+
+# ──────────────────────────────────────────────
+# 11b. Firefox dark mode
+# ──────────────────────────────────────────────
+# Forçar dark mode via autoconfig (funciona antes do primeiro profile)
+FF_LIB="/usr/lib/firefox"
+if [ -d "$FF_LIB" ]; then
+  # autoconfig.js — carrega o config
+  sudo mkdir -p "$FF_LIB/defaults/pref"
+  sudo tee "$FF_LIB/defaults/pref/autoconfig.js" > /dev/null << 'FFPREFEOF'
+pref("general.config.filename", "autoconfig.cfg");
+pref("general.config.obscure_value", 0);
+pref("general.config.sandbox_enabled", false);
+FFPREFEOF
+
+  # autoconfig.cfg — forçar dark mode
+  sudo tee "$FF_LIB/autoconfig.cfg" > /dev/null << 'FFCFGEOF'
+// Forçar tema escuro
+defaultPref("ui.systemUsesDarkTheme", 1);
+defaultPref("widget.content.uses-dark-theme", 1);
+FFCFGEOF
+  ok "Firefox: dark mode forçado via autoconfig"
+fi
+
+# Para profiles existentes — injeta user.js
+for prof_dir in "$HOME"/.mozilla/firefox/*.default-release; do
+  [ -d "$prof_dir" ] || continue
+  cat > "$prof_dir/user.js" << 'FFUSEREOF'
+user_pref("ui.systemUsesDarkTheme", 1);
+user_pref("widget.content.uses-dark-theme", 1);
+FFUSEREOF
+  ok "Firefox dark mode: $prof_dir"
+done 2>/dev/null || true
 xdg-mime default audacious.desktop audio/mp4
 
 ok "Apps padrão: Dolphin, mpv, gwenview, audacious"
