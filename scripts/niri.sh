@@ -891,6 +891,10 @@ if command -v gsettings &>/dev/null; then
   gsettings set org.gnome.desktop.session idle-delay 1800 2>/dev/null || true
   gsettings set org.gnome.settings-daemon.plugins.power sleep-inactive-ac-type 'nothing' 2>/dev/null || true
   gsettings set org.gnome.settings-daemon.plugins.power sleep-inactive-battery-type 'nothing' 2>/dev/null || true
+  # Forçar dark mode via gsettings (Firefox lê daqui)
+  gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark' 2>/dev/null || true
+  gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null || true
+  ok "GNOME power + dark mode configurados"
   ok "GNOME power settings configurados (sem suspensão)"
 fi
 
