@@ -255,7 +255,7 @@ OFFICIAL_PACKAGES=(
   grim slurp wl-clipboard fuzzel playerctl brightnessctl libnotify
   linux-lts-headers linux-zen-headers
   nwg-look xsettingsd
-  noto-fonts ttf-ubuntu-font-family
+  noto-fonts noto-fonts-cjk ttf-ubuntu-font-family
   ntfs-3g exfatprogs dosfstools btrfs-progs xfsprogs
   jfsutils f2fs-tools udftools e2fsprogs gvfs
   fzf ripgrep jq zenity wlr-randr

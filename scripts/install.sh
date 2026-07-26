@@ -484,7 +484,7 @@ sed -i '/\[multilib\]/,/Include/s/^#//' /mnt/etc/pacman.conf
 arch-chroot /mnt pacman -Sy --noconfirm \
   git nano wget sudo pacman-contrib reflector \
   networkmanager dhcpcd iwd usbutils base-devel \
-  noto-fonts noto-fonts-emoji
+  noto-fonts noto-fonts-cjk noto-fonts-emoji
 
 # User
 arch-chroot /mnt useradd -m -G wheel "$USERNAME"
