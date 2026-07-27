@@ -200,7 +200,7 @@ window-rule {
 
 window-rule {
     match app-id=r"^steam$"
-    open-floating true
+    open-floating false
 }
 
 window-rule {
