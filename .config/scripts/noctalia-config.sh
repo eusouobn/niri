@@ -323,6 +323,18 @@ EOF
     fi
     ok "environment.d: GTK_THEME=${theme}"
 
+    # gsettings — Firefox e apps GNOME leem daqui
+    if command -v gsettings &>/dev/null; then
+        gsettings set org.gnome.desktop.interface gtk-theme "$theme" 2>/dev/null || true
+        gsettings set org.gnome.desktop.interface icon-theme "$icon_theme" 2>/dev/null || true
+        if [[ "$theme" == *"dark"* || "$theme" == *"Dark"* ]]; then
+            gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null || true
+        else
+            gsettings set org.gnome.desktop.interface color-scheme 'prefer-light' 2>/dev/null || true
+        fi
+        ok "gsettings: gtk-theme=${theme} icon=${icon_theme}"
+    fi
+
     # Fontconfig — mono font weight
     if [[ -n "$mono_font" ]]; then
         local fc_dir="${HOME}/.config/fontconfig"
