@@ -235,9 +235,9 @@ if [ "$HAS_NVIDIA" -gt 0 ]; then
 
   if [ "$GPU_CHOICE" = "Outro" ]; then
     echo ""
-    echo "  Drivers disponíveis: AMDGPU, ATI, INTEL, Nouveau, Nvidia, Nvidia-Open, VMware"
+    echo "  Drivers disponíveis: AMDGPU, ATI, INTEL, Nouveau, Nvidia, Nvidia-Open, VM"
     PS3=$'\n  Driver: '
-    select VIDEODRIVER in AMDGPU ATI INTEL Nouveau Nvidia Nvidia-Open VMware; do
+    select VIDEODRIVER in AMDGPU ATI INTEL Nouveau Nvidia Nvidia-Open VM; do
       [ -n "$VIDEODRIVER" ] && break
     done
   else
@@ -255,7 +255,7 @@ else
   echo ""
 
   PS3=$'\n  Driver: '
-  select VIDEODRIVER in AMDGPU ATI INTEL Nouveau Nvidia Nvidia-Open VMware; do
+  select VIDEODRIVER in AMDGPU ATI INTEL Nouveau Nvidia Nvidia-Open VM; do
     [ -n "$VIDEODRIVER" ] && break
   done
 fi
@@ -266,7 +266,7 @@ ok "Driver: $VIDEODRIVER"
 echo ""
 echo "  Possui GPU dedicada + integrada? (Optimus/híbrido)"
 PS3=$'\n  GPU secundária: '
-select SECVID in NENHUM AMDGPU ATI INTEL Nouveau Nvidia Nvidia-Open VMware; do
+select SECVID in NENHUM AMDGPU ATI INTEL Nouveau Nvidia Nvidia-Open VM; do
   [ -n "$SECVID" ] && break
 done
 
