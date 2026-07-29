@@ -508,7 +508,11 @@ case "$VIDEODRIVER" in
     ;;
   *)
     DRIVER_LOWER=$(echo "$VIDEODRIVER" | tr '[:upper:]' '[:lower:]')
-    arch-chroot /mnt pacman -S --noconfirm "xf86-video-$DRIVER_LOWER"
+    if [ "$DRIVER_LOWER" = "vmware" ]; then
+      arch-chroot /mnt pacman -S --noconfirm mesa xf86-input-vmware
+    else
+      arch-chroot /mnt pacman -S --noconfirm "xf86-video-$DRIVER_LOWER"
+    fi
     ;;
 esac
 
