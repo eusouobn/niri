@@ -232,7 +232,7 @@ binds {
     Mod+Shift+Slash { show-hotkey-overlay; }
 
     Mod+T { spawn "kitty"; }
-    Mod+D { spawn-sh "qs -c noctalia-shell ipc call launcher toggle"; }
+    Mod+W { spawn-sh "qs -c noctalia-shell ipc call launcher toggle"; }
     Mod+E { spawn "dolphin"; }
     Super+Alt+L { spawn "swaylock"; }
 
@@ -377,7 +377,7 @@ binds {
     Mod+V       { toggle-window-floating; }
     Mod+Shift+V { switch-focus-between-floating-and-tiling; }
 
-    Mod+W { toggle-column-tabbed-display; }
+    Mod+F11 { toggle-column-tabbed-display; }
 
     Print { spawn-sh "bash ~/.config/scripts/screenshot-screen.sh"; }
     Shift+Print { spawn-sh "bash ~/.config/scripts/screenshot-window.sh"; }
