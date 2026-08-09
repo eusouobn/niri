@@ -405,7 +405,7 @@
         "showHibernateOnLockScreen": false,
         "showScreenCorners": false,
         "showSessionButtonsOnLockScreen": true,
-        "smoothScrollEnabled": true,
+        "smoothScrollEnabled": false,
         "telemetryEnabled": false
     },
     "hooks": {
