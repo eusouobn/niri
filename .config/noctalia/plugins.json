@@ -25,7 +25,7 @@
             "sourceUrl": "https://github.com/rael2pac/Noctalia-plugins"
         },
         "clipper": {
-            "enabled": false,
+            "enabled": true,
             "sourceUrl": "https://github.com/noctalia-dev/noctalia-plugins"
         },
         "polkit-agent": {
@@ -35,6 +35,10 @@
         "simple-notes": {
             "enabled": false,
             "sourceUrl": "https://github.com/noctalia-dev/noctalia-plugins"
+        },
+        "usb-drive-manager": {
+            "enabled": true,
+            "sourceUrl": "https://github.com/hennifant/noctalia-shell-usb-widget"
         }
     },
     "version": 2
