@@ -714,12 +714,5 @@
         "wallhavenSorting": "relevance",
         "wallpaperChangeMode": "random"
     },
-    "plugin_settings": {
-        "usb-drive-manager": {
-            "usb-drive-manager_open_near_click": true
-        },
-        "clipper": {
-            "clipper_open_near_click": true
-        }
-    }
+    "plugin_settings": {}
 }
