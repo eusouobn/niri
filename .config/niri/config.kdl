@@ -2,6 +2,12 @@
 // Inclui as definições de tema do Noctalia
 include "noctalia.kdl"
 
+
+
+
+
+window-rule { match app-id=r"^org\.kde\.kcalc$"; default-column-width { proportion 0.15; }; default-window-height { proportion 0.25; }; open-focused true; open-floating true; }
+window-rule { match app-id=r"^kitty$"; opacity 0.85; }
 environment {
     // Força Qt a rodar como Wayland nativo (em vez de XWayland)
     QT_QPA_PLATFORM "wayland"
@@ -118,8 +124,7 @@ spawn-at-startup "dbus-update-activation-environment" "--systemd" "--all"
 spawn-at-startup "/usr/bin/kbuildsycoca6" "--noincremental"
 // Desliga monitores após 30 minutos de inatividade
 // Ativa com qualquer tecla/mouse
-spawn-at-startup "swayidle" "-w" \
-    "timeout" "1800" "niri msg action power-off-monitors"
+spawn-at-startup "swayidle" "-w" "timeout" "1800" "niri msg action power-off-monitors"
 
 prefer-no-csd
 
@@ -180,21 +185,6 @@ blur {
 }
 
 window-rule {
-    match app-id=r"^kitty$"
-    opacity 0.85
-    background-effect {
-        blur true
-    }
-}
-
-layer-rule {
-    match namespace="^launcher$"
-    background-effect {
-        blur true
-    }
-}
-
-window-rule {
     match app-id=r"^org\.wezfurlong\.wezterm$"
     default-column-width { proportion 0.5; }
 }
@@ -216,11 +206,6 @@ window-rule {
 
 window-rule {
     match app-id=r"^org\.kde\.gwenview$"
-    open-floating true
-}
-
-window-rule {
-    match app-id=r"^org\.kde\.kcalc$"
     open-floating true
 }
 
@@ -410,3 +395,14 @@ gestures {
         off
     }
 }
+
+output "HDMI-A-1" {
+    mode "3840x2160@60.000"
+
+    scale 2.0
+
+    transform "normal"
+    position x=0 y=0
+}
+
+
