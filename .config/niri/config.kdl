@@ -24,6 +24,7 @@ environment {
 
 input {
     focus-follows-mouse max-scroll-amount="33%"
+    disable-power-key-handling
 
     keyboard {
         xkb {
