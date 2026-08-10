@@ -199,6 +199,56 @@ window-rule {
     open-fullscreen true
 }
 
+// ──────────────────────────────────────────────────────────────
+// Launchers de jogos (EA, Rockstar, Battle.net, etc.)
+// Abrem FLUTUANTES e visíveis, com tamanho limitado (max-size),
+// para poder logar/clicar em Play. Só o jogo abre em fullscreen.
+// ──────────────────────────────────────────────────────────────
+
+window-rule {
+    match title="^EA$"
+    open-floating true
+    open-fullscreen false
+    max-width 1000
+    max-height 700
+}
+
+window-rule {
+    match title="^Rockstar"
+    open-floating true
+    open-fullscreen false
+    max-width 1000
+    max-height 700
+}
+
+window-rule {
+    match title="Battle\\.net|Blizzard Battle"
+    open-floating true
+    open-fullscreen false
+    max-width 1000
+    max-height 700
+}
+
+// Janela helper sem título do jogo via Steam: esconde (não é interativa)
+window-rule {
+    match app-id="^steam_app_1238860$" title="^$"
+    open-floating true
+    open-fullscreen false
+    open-focused false
+    default-floating-position x=-10000 y=-10000
+    opacity 0.0
+}
+
+// PunkBuster: anti-cheat em background, sem interação — esconde
+window-rule {
+    match title="^PunkBuster"
+    match app-id="PnkBstr"
+    open-floating true
+    open-focused false
+    default-floating-position x=-10000 y=-10000
+    opacity 0.0
+}
+
 window-rule {
     match app-id=r"firefox$" title="^Picture-in-Picture$"
     open-floating true
